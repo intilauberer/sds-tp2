@@ -1,0 +1,11 @@
+Resumen TP2 - punto c/d: va vs eta
+Criterio estacionario: t >= 12
+Parametros: L=10.0, rho=4.0, r0=1.0, v0=0.03, tmax=20, runs/eta=1
+
+scenario, eta, n_runs, va_mean, va_std, va_sem
+none, 0.000000, 1, 0.728442, 0.000000, 0.000000
+none, 0.600000, 1, 0.236440, 0.000000, 0.000000
+fixed, 0.000000, 1, 0.449215, 0.000000, 0.000000
+fixed, 0.600000, 1, 0.215744, 0.000000, 0.000000
+circular, 0.000000, 1, 0.360162, 0.000000, 0.000000
+circular, 0.600000, 1, 0.383880, 0.000000, 0.000000

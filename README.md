@@ -41,8 +41,22 @@ python vicsek.py \
 - The number of particles is computed as `N = rho * L^2`.
 - The leader is always particle `id=0` by default (configurable via `--leader-id`).
 
-## Next Steps (for the assignment)
+## TP2 points b/c/d helper
 
-- Use the generated trajectory file to create animations where arrows represent velocity vectors colored by angle.
-- Compute the stationary average order parameter from `vicsek_order.txt`.
-- Sweep `--eta` to build the `input vs observable` curves required by the assignment.
+To automatically generate:
+- **(b)** temporal evolution of `va(t)` with stationary window criterion,
+- **(c)** `va` vs `eta` with error bars for each scenario,
+- **(d)** comparison of the three scenarios in one figure,
+
+run:
+
+```bash
+python tp2_bcd.py --out-dir output/tp2_bcd
+```
+
+Main outputs:
+- `output/tp2_bcd/b_evolucion_temporal_va.png`
+- `output/tp2_bcd/c_va_vs_eta_por_escenario.png`
+- `output/tp2_bcd/d_comparacion_escenarios.png`
+- `output/tp2_bcd/va_vs_eta_summary.csv`
+- `output/tp2_bcd/va_vs_eta_summary.txt`

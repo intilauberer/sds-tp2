@@ -7,6 +7,7 @@ This project provides a minimal implementation of the Vicsek self-propelled part
 - **No leader** (standard Vicsek model)
 - **Leader with fixed direction** (constant heading)
 - **Leader moving on a circular trajectory** (predefined circular path)
+- **Leader moving on a straight line** (`y = a*x + b` in unwrapped space)
 
 The simulation outputs text files suitable for offline animation and analysis.
 
@@ -24,6 +25,15 @@ python vicsek.py \
   --out-dir output \
   --leader fixed \
   --leader-angle 1.5
+```
+
+Straight-line leader example:
+
+```bash
+python vicsek.py \
+  --leader line \
+  --line-slope 0.7 \
+  --line-intercept 1.5
 ```
 
 ### Output Files

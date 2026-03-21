@@ -75,7 +75,10 @@ def make_animation(
     colors = (angles + math.pi) / (2 * math.pi)  # normalized 0..1
 
     # Scatter for all particles, colored by direction
-    particle_scatter = ax.scatter(xs, ys, c=colors, cmap="hsv", s=10, alpha=0.7, label="particles")
+    particle_kwargs = {"c": colors, "cmap": "hsv", "s": 10, "alpha": 0.7}
+    if leader_id >= 0:
+        particle_kwargs["label"] = "particles"
+    particle_scatter = ax.scatter(xs, ys, **particle_kwargs)
     quiv = ax.quiver(
         xs,
         ys,
@@ -97,8 +100,7 @@ def make_animation(
         ax.legend(loc="upper right")
     else:
         # Dummy empty scatter for consistency
-        leader_scatter = ax.scatter([], [], c="red", s=50, label="leader")
-        ax.legend(loc="upper right")
+        leader_scatter = ax.scatter([], [], c="red", s=50)
 
     def update(frame_idx, quiv, particle_scatter, leader_scatter, data, times, ax, leader_id):
         t = times[frame_idx]

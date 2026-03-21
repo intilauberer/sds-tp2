@@ -4,6 +4,7 @@ This implementation supports:
  - standard Vicsek model (no leader)
  - leader with fixed direction
  - leader with circular trajectory
+ - leader moving on a straight line (y = a*x + b in unwrapped space)
 
 Outputs:
  - trajectory file: each line: t id x y vx vy
@@ -53,6 +54,8 @@ class VicsekSimulation:
         leader_direction: Optional[float] = None,
         leader_circle_center: Optional[Tuple[float, float]] = None,
         leader_circle_radius: float = 5.0,
+        leader_line_slope: float = 0.0,
+        leader_line_intercept: float = 0.0,
     ):
         self.n = n_particles
         self.L = box_size
@@ -66,6 +69,8 @@ class VicsekSimulation:
         self.leader_direction = leader_direction
         self.leader_circle_center = leader_circle_center
         self.leader_circle_radius = leader_circle_radius
+        self.leader_line_slope = leader_line_slope
+        self.leader_line_intercept = leader_line_intercept
 
         if seed is not None:
             random.seed(seed)
@@ -80,6 +85,11 @@ class VicsekSimulation:
             # angular velocity such that v = R * omega
             self._leader_omega = self.v0 / max(1e-9, self.leader_circle_radius)
             self._leader_angle = 0.0
+        elif self.leader_mode == "line":
+            # Unit direction vector for straight-line motion with slope a.
+            norm = math.sqrt(1.0 + self.leader_line_slope * self.leader_line_slope)
+            self._leader_line_dx = 1.0 / norm
+            self._leader_line_dy = self.leader_line_slope / norm
 
     def _init_particles(self) -> None:
         # Initialize positions uniformly in box [0,L)
@@ -105,6 +115,14 @@ class VicsekSimulation:
             self._leader_angle = 0.0
             # direction tangent to circle (counterclockwise)
             self.particles[self.leader_id].theta = self._leader_angle + math.pi / 2.0
+
+        # If line leader, set initial point from y = a*x + b at x=0.
+        if self.leader_mode == "line":
+            a = self.leader_line_slope
+            b = self.leader_line_intercept
+            self.particles[self.leader_id].x = 0.0
+            self.particles[self.leader_id].y = self._apply_periodic(b)
+            self.particles[self.leader_id].theta = math.atan2(a, 1.0)
 
     def _apply_periodic(self, x: float) -> float:
         # Periodic boundary [0,L)
@@ -159,16 +177,20 @@ class VicsekSimulation:
             leader.y = cy + self.leader_circle_radius * math.sin(self._leader_angle)
             # Tangential direction (counter clockwise)
             leader.theta = self._leader_angle + math.pi / 2.0
+        elif self.leader_mode == "line":
+            leader.x = self._apply_periodic(leader.x + self.v0 * self._leader_line_dx * self.dt)
+            leader.y = self._apply_periodic(leader.y + self.v0 * self._leader_line_dy * self.dt)
+            leader.theta = math.atan2(self.leader_line_slope, 1.0)
 
     def step(self) -> None:
-        # First compute new directions for all particles except circular leader (position pre-update)
+        # First compute new directions for all particles except externally-controlled leaders.
         new_thetas = [p.theta for p in self.particles]
         for i, p in enumerate(self.particles):
             if self.leader_mode == "fixed" and i == self.leader_id:
                 # fixed leader direction stays constant
                 new_thetas[i] = self.leader_direction if self.leader_direction is not None else p.theta
                 continue
-            if self.leader_mode == "circular" and i == self.leader_id:
+            if self.leader_mode in ("circular", "line") and i == self.leader_id:
                 # will update in _update_leader
                 continue
             avg_angle = self._neighbor_average_angle(i)
@@ -178,21 +200,21 @@ class VicsekSimulation:
 
         # update directions
         for i, p in enumerate(self.particles):
-            if self.leader_mode == "circular" and i == self.leader_id:
+            if self.leader_mode in ("circular", "line") and i == self.leader_id:
                 continue
             p.theta = new_thetas[i]
 
         # Move particles
         for i, p in enumerate(self.particles):
-            if self.leader_mode == "circular" and i == self.leader_id:
-                # circular leader handled separately
+            if self.leader_mode in ("circular", "line") and i == self.leader_id:
+                # externally-controlled leader handled separately
                 continue
             vx, vy = p.velocity(self.v0)
             p.x = self._apply_periodic(p.x + vx * self.dt)
             p.y = self._apply_periodic(p.y + vy * self.dt)
 
-        # Update leader after motion for circular case
-        if self.leader_mode == "circular":
+        # Update leader after motion for externally-controlled cases
+        if self.leader_mode in ("circular", "line"):
             self._update_leader(t=0)
 
     def order_parameter(self) -> float:
@@ -246,10 +268,12 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument("--tmax", type=int, default=500, help="Number of time steps")
     parser.add_argument("--output-interval", type=int, default=10, help="Output interval")
     parser.add_argument("--out-dir", type=str, default="output", help="Output directory")
-    parser.add_argument("--leader", choices=["none", "fixed", "circular"], default="none", help="Leader mode")
+    parser.add_argument("--leader", choices=["none", "fixed", "circular", "line"], default="none", help="Leader mode")
     parser.add_argument("--leader-id", type=int, default=0, help="Leader particle id")
     parser.add_argument("--leader-angle", type=float, default=None, help="Fixed leader direction (rad)")
     parser.add_argument("--circle-radius", type=float, default=5.0, help="Radius for circular leader trajectory")
+    parser.add_argument("--line-slope", type=float, default=0.0, help="Slope 'a' for line leader y = a*x + b")
+    parser.add_argument("--line-intercept", type=float, default=0.0, help="Intercept 'b' for line leader y = a*x + b")
     return parser.parse_args(argv)
 
 
@@ -270,6 +294,8 @@ def main(argv: Optional[List[str]] = None) -> None:
         leader_direction=args.leader_angle,
         leader_circle_center=(args.L / 2.0, args.L / 2.0),
         leader_circle_radius=args.circle_radius,
+        leader_line_slope=args.line_slope,
+        leader_line_intercept=args.line_intercept,
     )
     sim.run(t_max=args.tmax, output_interval=args.output_interval, out_dir=args.out_dir, prefix="vicsek")
 

@@ -9,11 +9,13 @@ Usage:
 
 import argparse
 import math
+from collections import deque
 from collections import defaultdict
 
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
+from matplotlib.collections import LineCollection
 
 
 def load_trajectory(path: str):
@@ -47,6 +49,8 @@ def make_animation(
     arrow_length: float,
     fps: int = 10,
     dpi: int = 120,
+    trail_length: int = 0,
+    show_arrows: bool = True,
 ):
     print(f"Times: {len(times)}, Particles in first frame: {len(data[times[0]]) if times else 0}")
     if not times or not data[times[0]]:
@@ -79,18 +83,30 @@ def make_animation(
     if leader_id >= 0:
         particle_kwargs["label"] = "particles"
     particle_scatter = ax.scatter(xs, ys, **particle_kwargs)
-    quiv = ax.quiver(
-        xs,
-        ys,
-        dir_x,
-        dir_y,
-        colors,
-        cmap="hsv",
-        angles="xy",
-        scale_units="xy",
-        scale=1.0 / arrow_length,
-        width=0.004,
-    )
+    quiv = None
+    if show_arrows:
+        quiv = ax.quiver(
+            xs,
+            ys,
+            dir_x,
+            dir_y,
+            colors,
+            cmap="hsv",
+            angles="xy",
+            scale_units="xy",
+            scale=1.0 / arrow_length,
+            width=0.004,
+        )
+    trail_coll = None
+    trails = {}
+    if trail_length > 1:
+        for p in first:
+            pid = p[0]
+            trails[pid] = deque(maxlen=trail_length)
+            if 0.0 <= p[1] <= box_size and 0.0 <= p[2] <= box_size:
+                trails[pid].append((p[1], p[2]))
+        trail_coll = LineCollection([], colors="#66d9ff", linewidths=0.8, alpha=0.6)
+        ax.add_collection(trail_coll)
     # Leader highlight (if present)
     if leader_id >= 0:
         leader_mask = np.array([p[0] == leader_id for p in first])
@@ -102,7 +118,7 @@ def make_animation(
         # Dummy empty scatter for consistency
         leader_scatter = ax.scatter([], [], c="red", s=50)
 
-    def update(frame_idx, quiv, particle_scatter, leader_scatter, data, times, ax, leader_id):
+    def update(frame_idx, quiv, particle_scatter, leader_scatter, trail_coll, trails, data, times, ax, leader_id):
         t = times[frame_idx]
         pts = data[t]
         xs = np.array([p[1] for p in pts])
@@ -115,9 +131,10 @@ def make_animation(
         dir_y = vys / safe_speeds
         angles = np.arctan2(vys, vxs)
         colors = (angles + math.pi) / (2 * math.pi)
-        quiv.set_UVC(dir_x, dir_y)
-        quiv.set_offsets(np.column_stack([xs, ys]))
-        quiv.set_array(colors)
+        if quiv is not None:
+            quiv.set_UVC(dir_x, dir_y)
+            quiv.set_offsets(np.column_stack([xs, ys]))
+            quiv.set_array(colors)
         particle_scatter.set_offsets(np.column_stack([xs, ys]))
         particle_scatter.set_array(colors)  # Update colors
         if leader_id >= 0:
@@ -125,10 +142,49 @@ def make_animation(
             leader_scatter.set_offsets(np.column_stack([xs[leader_mask], ys[leader_mask]]))
         else:
             leader_scatter.set_offsets(np.empty((0, 2)))
+        if trail_coll is not None:
+            for p in pts:
+                pid = p[0]
+                if pid not in trails:
+                    trails[pid] = deque(maxlen=max(2, trail_length))
+                x, y = p[1], p[2]
+                # Ignore placeholders/out-of-bounds points.
+                if not (0.0 <= x <= box_size and 0.0 <= y <= box_size):
+                    trails[pid].clear()
+                    continue
+                # Break contrail on teleports (respawn/reinjection) to avoid screen-crossing artifacts.
+                if len(trails[pid]) > 0:
+                    x0, y0 = trails[pid][-1]
+                    if abs(x - x0) > box_size * 0.25 or abs(y - y0) > box_size * 0.25:
+                        trails[pid].clear()
+                trails[pid].append((x, y))
+            segs = []
+            for tr in trails.values():
+                if len(tr) < 2:
+                    continue
+                for i in range(1, len(tr)):
+                    x0, y0 = tr[i - 1]
+                    x1, y1 = tr[i]
+                    if abs(x1 - x0) > box_size / 2.0 or abs(y1 - y0) > box_size / 2.0:
+                        continue
+                    segs.append([(x0, y0), (x1, y1)])
+            trail_coll.set_segments(segs)
         ax.set_title(f"Vicsek model (t={t})")
-        return quiv, leader_scatter, particle_scatter
+        artists = [leader_scatter, particle_scatter]
+        if quiv is not None:
+            artists.append(quiv)
+        if trail_coll is not None:
+            artists.append(trail_coll)
+        return tuple(artists)
 
-    anim = animation.FuncAnimation(fig, update, frames=len(times), interval=100, blit=False, fargs=(quiv, particle_scatter, leader_scatter, data, times, ax, leader_id))
+    anim = animation.FuncAnimation(
+        fig,
+        update,
+        frames=len(times),
+        interval=100,
+        blit=False,
+        fargs=(quiv, particle_scatter, leader_scatter, trail_coll, trails, data, times, ax, leader_id),
+    )
 
     if out_path.lower().endswith(".gif"):
         writer = animation.PillowWriter(fps=fps)
@@ -152,6 +208,8 @@ def main():
         default=0.25,
         help="Arrow length in plot units (use larger values if arrows look too small)",
     )
+    parser.add_argument("--trail-length", type=int, default=0, help="Particle trail length in frames (0 disables trails)")
+    parser.add_argument("--no-arrows", action="store_true", help="Disable velocity arrows")
     args = parser.parse_args()
 
     times, data = load_trajectory(args.trajectory)
@@ -166,6 +224,8 @@ def main():
         out_path=args.out,
         arrow_length=args.arrow_length,
         fps=args.fps,
+        trail_length=max(0, args.trail_length),
+        show_arrows=(not args.no_arrows),
     )
 
 

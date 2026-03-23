@@ -50,6 +50,9 @@ def make_animation(
     fps: int = 10,
     dpi: int = 120,
     trail_length: int = 0,
+    trail_alpha: float = 0.25,
+    trail_linewidth: float = 0.5,
+    trail_stride: int = 1,
     show_arrows: bool = True,
 ):
     print(f"Times: {len(times)}, Particles in first frame: {len(data[times[0]]) if times else 0}")
@@ -99,13 +102,21 @@ def make_animation(
         )
     trail_coll = None
     trails = {}
+    trail_stride = max(1, int(trail_stride))
     if trail_length > 1:
         for p in first:
             pid = p[0]
+            if (pid % trail_stride) != 0:
+                continue
             trails[pid] = deque(maxlen=trail_length)
             if 0.0 <= p[1] <= box_size and 0.0 <= p[2] <= box_size:
                 trails[pid].append((p[1], p[2]))
-        trail_coll = LineCollection([], colors="#66d9ff", linewidths=0.8, alpha=0.6)
+        trail_coll = LineCollection(
+            [],
+            colors="#66d9ff",
+            linewidths=max(0.05, float(trail_linewidth)),
+            alpha=min(1.0, max(0.0, float(trail_alpha))),
+        )
         ax.add_collection(trail_coll)
     # Leader highlight (if present)
     if leader_id >= 0:
@@ -145,6 +156,8 @@ def make_animation(
         if trail_coll is not None:
             for p in pts:
                 pid = p[0]
+                if (pid % trail_stride) != 0:
+                    continue
                 if pid not in trails:
                     trails[pid] = deque(maxlen=max(2, trail_length))
                 x, y = p[1], p[2]
@@ -209,6 +222,9 @@ def main():
         help="Arrow length in plot units (use larger values if arrows look too small)",
     )
     parser.add_argument("--trail-length", type=int, default=0, help="Particle trail length in frames (0 disables trails)")
+    parser.add_argument("--trail-alpha", type=float, default=0.25, help="Trail opacity in [0,1]")
+    parser.add_argument("--trail-linewidth", type=float, default=0.5, help="Trail line width")
+    parser.add_argument("--trail-stride", type=int, default=1, help="Draw trails for 1 every N particles")
     parser.add_argument("--no-arrows", action="store_true", help="Disable velocity arrows")
     args = parser.parse_args()
 
@@ -225,6 +241,9 @@ def main():
         arrow_length=args.arrow_length,
         fps=args.fps,
         trail_length=max(0, args.trail_length),
+        trail_alpha=args.trail_alpha,
+        trail_linewidth=args.trail_linewidth,
+        trail_stride=max(1, args.trail_stride),
         show_arrows=(not args.no_arrows),
     )
 

@@ -1,12 +1,15 @@
-"""TP2 punto f: angulo del lider vs angulo del grupo.
+"""TP2 punto f: angulo del lider vs angulo promedio del sistema (sin lider).
 
-Genera una figura con dos paneles:
+Genera figuras separadas por escenario:
 - lider fijo
 - lider circular
 
 En cada panel:
-- theta_grupo(t) en [0, 2pi] (linea continua)
+- theta_S(t) en [0, 2pi] (linea continua)
 - theta_lider(t) en [0, 2pi] (linea punteada)
+
+Ademas calcula correlacion angular:
+    C(t) = cos(theta_L(t) - theta_S(t))
 """
 
 from __future__ import annotations
@@ -29,14 +32,20 @@ def wrap_0_2pi(theta: float) -> float:
     return float(theta % (2.0 * math.pi))
 
 
-def group_angle(sim: VicsekSimulation) -> float:
-    vx_sum = 0.0
-    vy_sum = 0.0
-    for p in sim.particles:
-        vx, vy = p.velocity(sim.v0)
-        vx_sum += vx
-        vy_sum += vy
-    return wrap_0_2pi(math.atan2(vy_sum, vx_sum))
+def system_angle_without_leader(sim: VicsekSimulation) -> float:
+    """theta_S = atan2(<sin(theta_i)>, <cos(theta_i)>), excluyendo al lider."""
+    sin_sum = 0.0
+    cos_sum = 0.0
+    count = 0
+    for i, p in enumerate(sim.particles):
+        if i == sim.leader_id:
+            continue
+        sin_sum += math.sin(p.theta)
+        cos_sum += math.cos(p.theta)
+        count += 1
+    if count == 0:
+        return 0.0
+    return wrap_0_2pi(math.atan2(sin_sum / count, cos_sum / count))
 
 
 def simulate_angles(
@@ -69,21 +78,25 @@ def simulate_angles(
     )
 
     t = np.arange(tmax + 1, dtype=int)
-    theta_group = np.zeros(tmax + 1, dtype=float)
+    theta_system = np.zeros(tmax + 1, dtype=float)
     theta_leader = np.zeros(tmax + 1, dtype=float)
+    corr = np.zeros(tmax + 1, dtype=float)
 
     for i in range(tmax + 1):
-        theta_group[i] = group_angle(sim)
+        theta_system[i] = system_angle_without_leader(sim)
         theta_leader[i] = wrap_0_2pi(sim.particles[sim.leader_id].theta)
+        corr[i] = math.cos(theta_leader[i] - theta_system[i])
         sim.step()
 
-    return {"t": t, "theta_group": theta_group, "theta_leader": theta_leader}
+    return {"t": t, "theta_system": theta_system, "theta_leader": theta_leader, "corr": corr}
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="TP2 f: angulo del lider vs angulo del grupo.")
     parser.add_argument("--out-dir", default="output/tp2_f", help="Directorio de salida")
-    parser.add_argument("--out-name", default="f_angulo_lider_vs_grupo.png", help="Nombre del grafico")
+    parser.add_argument("--out-name-prefix", default="f_angulo_lider_vs_grupo", help="Prefijo del grafico de angulos")
+    parser.add_argument("--corr-out-name-prefix", default="f_correlacion_lider_sistema", help="Prefijo del grafico de C(t)")
+    parser.add_argument("--save-series", action="store_true", help="Guardar series theta_S, theta_L y C(t) a txt")
     parser.add_argument("--L", type=float, default=10.0)
     parser.add_argument("--rho", type=float, default=4.0)
     parser.add_argument("--r0", type=float, default=1.0)
@@ -114,27 +127,53 @@ def main() -> None:
 
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    out_path = out_dir / args.out_name
-
-    fig, axes = plt.subplots(1, 2, figsize=(13, 4.5), sharey=True, constrained_layout=True)
-    for ax, scenario in zip(axes, SCENARIOS):
+    for scenario in SCENARIOS:
         t = results[scenario]["t"]
-        theta_group = results[scenario]["theta_group"]
+        theta_system = results[scenario]["theta_system"]
         theta_leader = results[scenario]["theta_leader"]
-        ax.plot(t, theta_group, lw=1.8, color="#1f77b4", label=r"$\theta_{grupo}(t)$")
+
+        out_path = out_dir / f"{args.out_name_prefix}_{scenario}.png"
+        fig, ax = plt.subplots(1, 1, figsize=(8.0, 4.5), constrained_layout=True)
+        ax.plot(t, theta_system, lw=1.8, color="#1f77b4", label=r"$\theta_{S}(t)$")
         ax.plot(t, theta_leader, lw=1.8, ls="--", color="#d62728", label=r"$\theta_{lider}(t)$")
         ax.set_title(f"Escenario: {scenario}")
         ax.set_xlabel("t")
+        ax.set_ylabel("Angulo [rad]")
         ax.grid(alpha=0.3)
         ax.set_ylim(0.0, 2.0 * math.pi)
         ax.set_yticks([0, math.pi / 2, math.pi, 3 * math.pi / 2, 2 * math.pi])
         ax.set_yticklabels(["0", r"$\pi/2$", r"$\pi$", r"$3\pi/2$", r"$2\pi$"])
         ax.legend(loc="upper right")
-    axes[0].set_ylabel("Angulo [rad]")
+        fig.savefig(out_path, dpi=220)
+        plt.close(fig)
+        print(f"[ok] figure: {out_path.resolve()}")
 
-    fig.savefig(out_path, dpi=220)
-    plt.close(fig)
-    print(f"[ok] figure: {out_path.resolve()}")
+        corr_path = out_dir / f"{args.corr_out_name_prefix}_{scenario}.png"
+        fig2, ax2 = plt.subplots(1, 1, figsize=(8.0, 4.0), constrained_layout=True)
+        c = results[scenario]["corr"]
+        ax2.plot(t, c, lw=1.8, color="#2ca02c", label=r"$C(t)=\cos(\theta_L-\theta_S)$")
+        ax2.set_title(f"Escenario: {scenario}")
+        ax2.set_xlabel("t")
+        ax2.set_ylabel("Correlacion angular")
+        ax2.set_ylim(-1.05, 1.05)
+        ax2.grid(alpha=0.3)
+        ax2.legend(loc="upper right")
+        fig2.savefig(corr_path, dpi=220)
+        plt.close(fig2)
+        print(f"[ok] correlation figure: {corr_path.resolve()}")
+
+    if args.save_series:
+        for scenario in SCENARIOS:
+            series_path = out_dir / f"f_series_{scenario}.txt"
+            t = results[scenario]["t"]
+            theta_s = results[scenario]["theta_system"]
+            theta_l = results[scenario]["theta_leader"]
+            c = results[scenario]["corr"]
+            with open(series_path, "w", encoding="utf-8") as f:
+                f.write("# t theta_S theta_L C\n")
+                for i in range(len(t)):
+                    f.write(f"{int(t[i])} {theta_s[i]:.8f} {theta_l[i]:.8f} {c[i]:.8f}\n")
+            print(f"[ok] series: {series_path.resolve()}")
 
 
 if __name__ == "__main__":

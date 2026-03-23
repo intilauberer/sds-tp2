@@ -59,9 +59,24 @@ class NaturalRotationVicsekSimulation:
         inflow_fraction: Optional[float],
         inflow_mode: str,
         max_particles: int,
+        stream_stop_time: Optional[int],
+        stream_inner_size: float,
+        shrink_start: Optional[int],
+        shrink_duration: int,
+        shrink_target_size: Optional[float],
+        shrink_conserve_angular_momentum: bool,
+        shrink_max_speed_mult: float,
         respawn_on_edge: bool,
         alignment_strength: float,
         turn_inertia: float,
+        repulsion_radius: float,
+        repulsion_strength: float,
+        attraction_radius: float,
+        attraction_strength: float,
+        pressure_suction: bool,
+        pressure_grid: int,
+        pressure_strength: float,
+        pressure_smooth_iters: int,
         dt: float = 1.0,
         seed: Optional[int] = None,
     ) -> None:
@@ -84,9 +99,24 @@ class NaturalRotationVicsekSimulation:
         self.inflow_fraction = None if inflow_fraction is None else max(0.0, min(1.0, inflow_fraction))
         self.inflow_mode = inflow_mode
         self.max_particles = max(max_particles, n_particles)
+        self.stream_stop_time = stream_stop_time
+        self.stream_inner_size = max(0.0, stream_inner_size)
+        self.shrink_start = shrink_start
+        self.shrink_duration = max(0, shrink_duration)
+        self.shrink_target_size = None if shrink_target_size is None else max(0.0, min(self.L, shrink_target_size))
+        self.shrink_conserve_angular_momentum = shrink_conserve_angular_momentum
+        self.shrink_max_speed_mult = max(1.0, shrink_max_speed_mult)
         self.respawn_on_edge = respawn_on_edge
         self.alignment_strength = min(max(alignment_strength, 0.0), 1.0)
         self.turn_inertia = min(max(turn_inertia, 0.0), 0.99)
+        self.repulsion_radius = max(0.0, repulsion_radius)
+        self.repulsion_strength = min(max(repulsion_strength, 0.0), 1.0)
+        self.attraction_radius = max(0.0, attraction_radius)
+        self.attraction_strength = min(max(attraction_strength, 0.0), 1.0)
+        self.pressure_suction = pressure_suction
+        self.pressure_grid = max(4, pressure_grid)
+        self.pressure_strength = min(max(pressure_strength, 0.0), 1.0)
+        self.pressure_smooth_iters = max(0, pressure_smooth_iters)
         self.dt = dt
         self.center = (self.L / 2.0, self.L / 2.0)
         self.total_respawns = 0
@@ -219,21 +249,98 @@ class NaturalRotationVicsekSimulation:
             ("ne", -math.pi / 4.0),
         ]
 
+    def _streams_active(self) -> bool:
+        if self.stream_stop_time is None:
+            return True
+        return self.step_count < self.stream_stop_time
+
+    def _stream_region_bounds(self) -> Tuple[float, float, float, float]:
+        # Default stream region is whole map. Optionally use centered inner square.
+        inner_size = self._current_stream_inner_size()
+        if 0.0 < inner_size < self.L:
+            half = inner_size / 2.0
+            cx = self.L / 2.0
+            cy = self.L / 2.0
+            xmin = max(0.0, cx - half)
+            xmax = min(self.L, cx + half)
+            ymin = max(0.0, cy - half)
+            ymax = min(self.L, cy + half)
+            return xmin, xmax, ymin, ymax
+        return 0.0, self.L, 0.0, self.L
+
+    def _base_stream_inner_size(self) -> float:
+        if 0.0 < self.stream_inner_size < self.L:
+            return self.stream_inner_size
+        return self.L
+
+    def _current_stream_inner_size(self) -> float:
+        base = self._base_stream_inner_size()
+        if self.shrink_start is None or self.shrink_target_size is None:
+            return base
+        if self.step_count < self.shrink_start:
+            return base
+        target = min(base, self.shrink_target_size)
+        if self.shrink_duration <= 0:
+            return max(1e-6, target)
+        alpha = min(1.0, max(0.0, (self.step_count - self.shrink_start) / float(self.shrink_duration)))
+        size = base + alpha * (target - base)
+        return max(1e-6, size)
+
+    def _current_speed_scale(self) -> float:
+        if not self.shrink_conserve_angular_momentum:
+            return 1.0
+        base = max(1e-6, self._base_stream_inner_size())
+        current = max(1e-6, self._current_stream_inner_size())
+        scale = base / current
+        return min(self.shrink_max_speed_mult, max(1.0, scale))
+
+    def _current_speed(self) -> float:
+        return self.v0 * self._current_speed_scale()
+
+    def _outside_stream_region(self, x: float, y: float) -> bool:
+        xmin, xmax, ymin, ymax = self._stream_region_bounds()
+        return x <= xmin or x >= xmax or y <= ymin or y >= ymax
+
+    def _outside_global_box(self, x: float, y: float) -> bool:
+        return x <= 0.0 or x >= self.L or y <= 0.0 or y >= self.L
+
+    def _should_respawn_on_exit(self, x: float, y: float) -> bool:
+        # If the current stream region is inner, keep reinjection local to that region.
+        if self._current_stream_inner_size() < (self.L - 1e-9):
+            return self._outside_stream_region(x, y)
+        return self._outside_global_box(x, y)
+
+    def _reflect_inside_stream_region(self, p: Particle, x: float, y: float) -> Tuple[float, float, float]:
+        xmin, xmax, ymin, ymax = self._stream_region_bounds()
+        theta = p.theta
+        # Reflect heading on collided boundary and clamp position back into region.
+        if x <= xmin or x >= xmax:
+            theta = math.pi - theta
+            x = min(max(x, xmin), xmax)
+        if y <= ymin or y >= ymax:
+            theta = -theta
+            y = min(max(y, ymin), ymax)
+        theta = math.atan2(math.sin(theta), math.cos(theta))
+        return x, y, theta
+
     def _sample_edge_spawn(self, stream_name: str) -> Tuple[float, float]:
-        eps = min(1e-3, 0.001 * self.L)
+        xmin, xmax, ymin, ymax = self._stream_region_bounds()
+        width = max(1e-9, xmax - xmin)
+        height = max(1e-9, ymax - ymin)
+        eps = min(1e-3, 0.001 * max(width, height))
         if stream_name == "west":
-            return (eps, random.random() * self.L)
+            return (xmin + eps, ymin + random.random() * height)
         if stream_name == "east":
-            return (self.L - eps, random.random() * self.L)
+            return (xmax - eps, ymin + random.random() * height)
         if stream_name == "nw":
-            return (random.random() * 0.2 * self.L, self.L - eps)
+            return (xmin + random.random() * 0.2 * width, ymax - eps)
         if stream_name == "north":
-            return (random.random() * self.L, self.L - eps)
+            return (xmin + random.random() * width, ymax - eps)
         if stream_name == "ne":
-            return (self.L - random.random() * 0.2 * self.L, self.L - eps)
+            return (xmax - random.random() * 0.2 * width, ymax - eps)
         if stream_name == "sw":
-            return (random.random() * 0.2 * self.L, random.random() * 0.2 * self.L)
-        return (eps, random.random() * self.L)
+            return (xmin + random.random() * 0.2 * width, ymin + random.random() * 0.2 * height)
+        return (xmin + eps, ymin + random.random() * height)
 
     def _apply_bounds(self, x: float) -> float:
         if x < 0.0:
@@ -343,13 +450,138 @@ class NaturalRotationVicsekSimulation:
             return p.theta
         return math.atan2(sin_sum, cos_sum)
 
-    def step(self) -> None:
+    def _repulsion_angle(self, idx: int, grid: Optional[Dict[Tuple[int, int], List[int]]] = None, cell_size: float = 0.0) -> Optional[float]:
+        if self.repulsion_radius <= 0.0:
+            return None
+        p = self.particles[idx]
+        if not p.active:
+            return None
+
+        rx = 0.0
+        ry = 0.0
+        r2 = self.repulsion_radius * self.repulsion_radius
+
+        def accumulate_from(j: int) -> None:
+            nonlocal rx, ry
+            if j == idx:
+                return
+            q = self.particles[j]
+            if not q.active:
+                return
+            dx = q.x - p.x
+            dy = q.y - p.y
+            dx, dy = self._vector_direct(dx, dy)
+            d2 = dx * dx + dy * dy
+            if d2 <= 1e-12 or d2 > r2:
+                return
+            # Inverse-distance weighted push away from neighbors.
+            rx += (-dx) / d2
+            ry += (-dy) / d2
+
+        if grid is None or cell_size <= 0.0:
+            for j in range(len(self.particles)):
+                accumulate_from(j)
+        else:
+            cx = int(p.x // cell_size)
+            cy = int(p.y // cell_size)
+            for dx_cell in (-1, 0, 1):
+                for dy_cell in (-1, 0, 1):
+                    bucket = grid.get((cx + dx_cell, cy + dy_cell))
+                    if not bucket:
+                        continue
+                    for j in bucket:
+                        accumulate_from(j)
+
+        if rx * rx + ry * ry <= 1e-14:
+            return None
+        return math.atan2(ry, rx)
+
+    def _attraction_angle(self, idx: int, grid: Optional[Dict[Tuple[int, int], List[int]]] = None, cell_size: float = 0.0) -> Optional[float]:
+        if self.attraction_radius <= 0.0:
+            return None
+        p = self.particles[idx]
+        if not p.active:
+            return None
+
+        ax = 0.0
+        ay = 0.0
+        count = 0
+        r2_max = self.attraction_radius * self.attraction_radius
+        r2_min = self.repulsion_radius * self.repulsion_radius
+
+        def accumulate_from(j: int) -> None:
+            nonlocal ax, ay, count
+            if j == idx:
+                return
+            q = self.particles[j]
+            if not q.active:
+                return
+            dx = q.x - p.x
+            dy = q.y - p.y
+            dx, dy = self._vector_direct(dx, dy)
+            d2 = dx * dx + dy * dy
+            if d2 <= r2_min or d2 > r2_max:
+                return
+            ax += dx
+            ay += dy
+            count += 1
+
+        if grid is None or cell_size <= 0.0:
+            for j in range(len(self.particles)):
+                accumulate_from(j)
+        else:
+            cx = int(p.x // cell_size)
+            cy = int(p.y // cell_size)
+            for dx_cell in (-1, 0, 1):
+                for dy_cell in (-1, 0, 1):
+                    bucket = grid.get((cx + dx_cell, cy + dy_cell))
+                    if not bucket:
+                        continue
+                    for j in bucket:
+                        accumulate_from(j)
+
+        if count == 0:
+            return None
+        return math.atan2(ay, ax)
+
+    def _compute_pressure_gradients(self) -> Tuple[np.ndarray, np.ndarray, float]:
+        g = self.pressure_grid
+        density = np.zeros((g, g), dtype=float)
+        if len(self.particles) == 0:
+            return density, density, self.L / g
+
+        cell_size = self.L / g
         for p in self.particles:
-            if not p.active and self.step_count >= p.release_step:
-                self._respawn_particle(p, refresh_spawn=True)
+            if not p.active:
+                continue
+            ix = min(g - 1, max(0, int(p.x / cell_size)))
+            iy = min(g - 1, max(0, int(p.y / cell_size)))
+            density[iy, ix] += 1.0
+
+        sm = density
+        for _ in range(self.pressure_smooth_iters):
+            pad = np.pad(sm, ((1, 1), (1, 1)), mode="edge")
+            sm = (
+                pad[1:-1, 1:-1]
+                + pad[:-2, 1:-1]
+                + pad[2:, 1:-1]
+                + pad[1:-1, :-2]
+                + pad[1:-1, 2:]
+            ) / 5.0
+
+        potential = float(np.mean(sm)) - sm
+        dpy, dpx = np.gradient(potential, cell_size, cell_size, edge_order=1)
+        return dpx, dpy, cell_size
+
+    def step(self) -> None:
+        streams_active = self._streams_active()
+        if streams_active:
+            for p in self.particles:
+                if not p.active and self.step_count >= p.release_step:
+                    self._respawn_particle(p, refresh_spawn=True)
 
         inflow_now = self._current_inflow_count()
-        if self.feed_mode == "streams" and inflow_now > 0:
+        if streams_active and self.feed_mode == "streams" and inflow_now > 0:
             inactive_ids = [i for i, p in enumerate(self.particles) if not p.active]
             spawned = 0
             if inactive_ids:
@@ -400,57 +632,83 @@ class NaturalRotationVicsekSimulation:
                     self.inflow_cursor = (self.inflow_cursor + can_add) % len(specs)
 
         new_thetas = [p.theta for p in self.particles]
-        cell_size = self.r0 if self.r0 > 0.0 else 0.0
+        cell_size = max(self.r0, self.repulsion_radius, self.attraction_radius)
         grid = self._build_spatial_grid(cell_size) if cell_size > 0.0 else None
+        pgrad_x: Optional[np.ndarray] = None
+        pgrad_y: Optional[np.ndarray] = None
+        pcell = 0.0
+        if self.pressure_suction and self.pressure_strength > 0.0:
+            pgrad_x, pgrad_y, pcell = self._compute_pressure_gradients()
         for i in range(len(self.particles)):
             if not self.particles[i].active:
                 continue
             avg = self._neighbor_average_angle(i, grid=grid, cell_size=cell_size)
             aligned = self._blend_angles(self.particles[i].theta, avg, self.alignment_strength)
             noisy_target = aligned + (random.random() - 0.5) * self.noise
+            rep_theta = self._repulsion_angle(i, grid=grid, cell_size=cell_size)
+            if rep_theta is not None and self.repulsion_strength > 0.0:
+                noisy_target = self._blend_angles(noisy_target, rep_theta, self.repulsion_strength)
+            att_theta = self._attraction_angle(i, grid=grid, cell_size=cell_size)
+            if att_theta is not None and self.attraction_strength > 0.0:
+                noisy_target = self._blend_angles(noisy_target, att_theta, self.attraction_strength)
+            if pgrad_x is not None and pgrad_y is not None and pcell > 0.0:
+                p = self.particles[i]
+                ix = min(pgrad_x.shape[1] - 1, max(0, int(p.x / pcell)))
+                iy = min(pgrad_x.shape[0] - 1, max(0, int(p.y / pcell)))
+                gx = float(pgrad_x[iy, ix])
+                gy = float(pgrad_y[iy, ix])
+                if gx * gx + gy * gy > 1e-12:
+                    suction_theta = math.atan2(gy, gx)
+                    noisy_target = self._blend_angles(noisy_target, suction_theta, self.pressure_strength)
             # Angular inertia: keep part of previous heading to avoid abrupt turns.
             turn_alpha = 1.0 - self.turn_inertia
             new_thetas[i] = self._blend_angles(self.particles[i].theta, noisy_target, turn_alpha)
 
         replaced_this_step = 0
+        current_speed = self._current_speed()
         for i, p in enumerate(self.particles):
             if not p.active:
                 continue
             p.theta = new_thetas[i]
-            vx, vy = p.velocity(self.v0)
+            vx, vy = p.velocity(current_speed)
             nx = p.x + vx * self.dt
             ny = p.y + vy * self.dt
-            if self.respawn_on_edge and (nx <= 0.0 or nx >= self.L or ny <= 0.0 or ny >= self.L):
-                self._respawn_particle(p, refresh_spawn=True)
-                self.total_edge_respawns += 1
-                continue
+            if self.respawn_on_edge and self._should_respawn_on_exit(nx, ny):
+                if streams_active:
+                    self._respawn_particle(p, refresh_spawn=True)
+                    self.total_edge_respawns += 1
+                    continue
+                nx, ny, p.theta = self._reflect_inside_stream_region(p, nx, ny)
             p.x = self._apply_bounds(nx)
             p.y = self._apply_bounds(ny)
-            p.ttl -= 1
-            if p.ttl <= 0:
-                self._respawn_particle(p, refresh_spawn=True)
-                replaced_this_step += 1
+            if streams_active:
+                p.ttl -= 1
+                if p.ttl <= 0:
+                    self._respawn_particle(p, refresh_spawn=True)
+                    replaced_this_step += 1
         self.total_respawns += replaced_this_step
         self.step_count += 1
 
     def order_parameter(self) -> float:
+        speed_now = self._current_speed()
         vx_sum = 0.0
         vy_sum = 0.0
         active_n = 0
         for p in self.particles:
             if not p.active:
                 continue
-            vx, vy = p.velocity(self.v0)
+            vx, vy = p.velocity(speed_now)
             vx_sum += vx
             vy_sum += vy
             active_n += 1
-        denom = self.v0 * active_n
+        denom = speed_now * active_n
         if denom == 0.0:
             return 0.0
         return math.sqrt(vx_sum * vx_sum + vy_sum * vy_sum) / denom
 
     def circulation_parameter(self) -> float:
-        # +1 means strong CCW vortex, -1 strong CW vortex, ~0 no global rotation.
+        # Mean tangential speed around center: >0 CCW, <0 CW, ~0 no net rotation.
+        speed_now = self._current_speed()
         cx, cy = self.center
         s = 0.0
         count = 0
@@ -462,7 +720,7 @@ class NaturalRotationVicsekSimulation:
             if r < 1e-12:
                 continue
             tx, ty = (-dy / r, dx / r)  # CCW tangent
-            vx, vy = p.velocity(1.0)
+            vx, vy = p.velocity(speed_now)
             s += vx * tx + vy * ty
             count += 1
         if count == 0:
@@ -496,10 +754,11 @@ class NaturalRotationVicsekSimulation:
                 if t % output_interval == 0:
                     order_now = self.order_parameter()
                     circ_now = self.circulation_parameter()
+                    speed_now = self._current_speed()
                     forder.write(f"{t} {order_now:.6f}\n")
                     fcirc.write(f"{t} {circ_now:.6f}\n")
                     for p in self.particles:
-                        vx, vy = p.velocity(self.v0)
+                        vx, vy = p.velocity(speed_now)
                         ftraj.write(f"{t} {p.id} {p.x:.6f} {p.y:.6f} {vx:.6f} {vy:.6f}\n")
                     self.save_state(state_path)
                 if live_check and (t % max(1, live_check_interval) == 0):
@@ -508,7 +767,8 @@ class NaturalRotationVicsekSimulation:
                     rotating = "YES" if abs(circ_live) >= 0.20 else "no"
                     print(
                         f"[live] t={t:4d}/{t_max} active={active_count:4d} "
-                        f"circ={circ_live:+.3f} rotating={rotating}",
+                        f"circ={circ_live:+.3f} rotating={rotating} "
+                        f"inner={self._current_stream_inner_size():.2f} vscale={self._current_speed_scale():.2f}",
                         flush=True,
                     )
                 self.step()
@@ -545,6 +805,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--animate-out", type=str, default="", help="Optional output animation path (gif/mp4)")
     parser.add_argument("--fps", type=int, default=20, help="Animation FPS if --animate-out is provided")
     parser.add_argument("--arrow-length", type=float, default=0.25, help="Arrow length for animation")
+    parser.add_argument("--trail-length", type=int, default=3, help="Trail length in frames for animation")
+    parser.add_argument("--trail-alpha", type=float, default=0.20, help="Trail opacity in [0,1]")
+    parser.add_argument("--trail-linewidth", type=float, default=0.45, help="Trail line width")
+    parser.add_argument("--trail-stride", type=int, default=3, help="Draw trails for 1 every N particles")
     parser.add_argument("--ttl-min", type=int, default=260, help="Minimum particle TTL before reinjection")
     parser.add_argument("--ttl-max", type=int, default=520, help="Maximum particle TTL before reinjection")
     parser.add_argument(
@@ -581,6 +845,42 @@ def parse_args() -> argparse.Namespace:
         help="`inactive_only`: no replacement; `replace_active`: replace active; `append_new`: keep adding particles",
     )
     parser.add_argument("--max-particles", type=int, default=6000, help="Upper bound when --inflow-mode=append_new")
+    parser.add_argument("--stream-stop-time", type=int, default=-1, help="If >=0, disable stream injection/respawns when t reaches this value")
+    parser.add_argument(
+        "--stream-inner-size",
+        type=float,
+        default=0.0,
+        help="If >0 and <L, inject streams from centered inner square of this side length",
+    )
+    parser.add_argument(
+        "--shrink-start",
+        type=int,
+        default=-1,
+        help="If >=0, timestep when centered inner region starts shrinking",
+    )
+    parser.add_argument(
+        "--shrink-duration",
+        type=int,
+        default=0,
+        help="Timesteps used to shrink from initial inner size to --shrink-target-size",
+    )
+    parser.add_argument(
+        "--shrink-target-size",
+        type=float,
+        default=-1.0,
+        help="Final centered inner size after shrinking (<= initial inner size)",
+    )
+    parser.add_argument(
+        "--shrink-conserve-angular-momentum",
+        action="store_true",
+        help="Scale speed by contraction factor (capped) during shrink",
+    )
+    parser.add_argument(
+        "--shrink-max-speed-mult",
+        type=float,
+        default=4.0,
+        help="Maximum multiplier for speed scaling during shrink",
+    )
     parser.add_argument("--respawn-on-edge", action="store_true", help="Respawn particles when they hit any box edge")
     parser.add_argument(
         "--alignment-strength",
@@ -594,6 +894,24 @@ def parse_args() -> argparse.Namespace:
         default=0.0,
         help="Angular inertia in [0,1): higher = smoother/slower turning",
     )
+    parser.add_argument("--repulsion-radius", type=float, default=0.0, help="Short-range repulsion radius (0 disables)")
+    parser.add_argument(
+        "--repulsion-strength",
+        type=float,
+        default=0.0,
+        help="Blend weight toward repulsion direction in [0,1]",
+    )
+    parser.add_argument("--attraction-radius", type=float, default=0.0, help="Mid-range attraction radius (0 disables)")
+    parser.add_argument(
+        "--attraction-strength",
+        type=float,
+        default=0.0,
+        help="Blend weight toward attraction direction in [0,1]",
+    )
+    parser.add_argument("--pressure-suction", action="store_true", help="Enable low-density suction heading bias")
+    parser.add_argument("--pressure-grid", type=int, default=24, help="Tile resolution for pressure-like density field")
+    parser.add_argument("--pressure-strength", type=float, default=0.20, help="Blend weight toward suction direction [0,1]")
+    parser.add_argument("--pressure-smooth-iters", type=int, default=2, help="Smoothing iterations for pressure field")
     parser.add_argument("--live-check", action="store_true", help="Print live rotation diagnostics while sim runs")
     parser.add_argument(
         "--live-check-interval",
@@ -667,9 +985,24 @@ def main() -> None:
         inflow_fraction=args.inflow_fraction,
         inflow_mode=args.inflow_mode,
         max_particles=max(1, args.max_particles),
+        stream_stop_time=(None if args.stream_stop_time < 0 else args.stream_stop_time),
+        stream_inner_size=args.stream_inner_size,
+        shrink_start=(None if args.shrink_start < 0 else args.shrink_start),
+        shrink_duration=max(0, args.shrink_duration),
+        shrink_target_size=(None if args.shrink_target_size < 0.0 else args.shrink_target_size),
+        shrink_conserve_angular_momentum=args.shrink_conserve_angular_momentum,
+        shrink_max_speed_mult=max(1.0, args.shrink_max_speed_mult),
         respawn_on_edge=args.respawn_on_edge,
         alignment_strength=args.alignment_strength,
         turn_inertia=args.turn_inertia,
+        repulsion_radius=args.repulsion_radius,
+        repulsion_strength=args.repulsion_strength,
+        attraction_radius=args.attraction_radius,
+        attraction_strength=args.attraction_strength,
+        pressure_suction=args.pressure_suction,
+        pressure_grid=max(4, args.pressure_grid),
+        pressure_strength=args.pressure_strength,
+        pressure_smooth_iters=max(0, args.pressure_smooth_iters),
         dt=1.0,
         seed=args.seed,
     )
@@ -707,7 +1040,10 @@ def main() -> None:
             out_path=args.animate_out,
             arrow_length=args.arrow_length,
             fps=args.fps,
-            trail_length=3,
+            trail_length=max(0, args.trail_length),
+            trail_alpha=args.trail_alpha,
+            trail_linewidth=args.trail_linewidth,
+            trail_stride=max(1, args.trail_stride),
             show_arrows=False,
         )
         print(f"[ok] animation: {args.animate_out}")

@@ -135,7 +135,7 @@ def run_animation_case(
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate TP2 item (e): extra densities and characteristic animations.")
     parser.add_argument("--out-dir", default="output/tp2_e", help="Output directory for item (e)")
-    parser.add_argument("--densities", type=float, nargs=2, default=[2.0, 8.0], help="Exactly two extra densities")
+    parser.add_argument("--densities", type=float, nargs="+", default=[2.0, 8.0], help="One or more extra densities")
     parser.add_argument("--eta-min", type=float, default=0.0)
     parser.add_argument("--eta-max", type=float, default=6.0)
     parser.add_argument("--eta-step", type=float, default=1.0)
@@ -158,40 +158,58 @@ def main() -> None:
     parser.add_argument("--anim-fps", type=int, default=12)
     parser.add_argument("--anim-arrow-length", type=float, default=0.25)
     parser.add_argument("--seed-base", type=int, default=30300)
+    parser.add_argument("--skip-graphs", action="store_true", help="Skip comparative sweep/plots and tables")
+    parser.add_argument("--skip-animations", action="store_true", help="Skip characteristic animations")
     args = parser.parse_args()
 
     out_dir = Path(args.out_dir)
     eta_values = parse_eta_values(args.eta_min, args.eta_max, args.eta_step)
+    densities = []
+    for d in args.densities:
+        if d <= 0:
+            continue
+        # keep order, remove duplicates
+        if d not in densities:
+            densities.append(d)
+    if not densities:
+        raise ValueError("No valid positive densities provided in --densities")
 
     print(
-        f"Item (e): densities={args.densities}, eta_range=[{args.eta_min}, {args.eta_max}] step={args.eta_step}, "
-        f"workers={args.workers}",
+        f"Item (e): densities={densities}, eta_range=[{args.eta_min}, {args.eta_max}] step={args.eta_step}, "
+        f"workers={args.workers}, skip_graphs={args.skip_graphs}, skip_animations={args.skip_animations}",
         flush=True,
     )
 
-    for rho_i, rho in enumerate(args.densities):
-        print(f"\n[rho={rho:g}] Running comparative sweep...", flush=True)
-        config = RunConfig(
-            L=args.L,
-            rho=rho,
-            r0=args.r0,
-            v0=args.v0,
-            tmax=args.tmax_graphs,
-            eta_values=eta_values,
-            runs_per_eta=args.runs_per_eta,
-            stationary_start=args.stationary_start,
-            fixed_leader_angle=args.fixed_leader_angle,
-            circle_radius=args.circle_radius,
-            seed_base=args.seed_base + 10_000 * rho_i,
-            workers=args.workers,
-        )
-        series, scalar_runs = run_sweep(config)
+    for rho_i, rho in enumerate(densities):
+        if not args.skip_graphs:
+            print(f"\n[rho={rho:g}] Running comparative sweep...", flush=True)
+            config = RunConfig(
+                L=args.L,
+                rho=rho,
+                r0=args.r0,
+                v0=args.v0,
+                tmax=args.tmax_graphs,
+                eta_values=eta_values,
+                runs_per_eta=args.runs_per_eta,
+                stationary_start=args.stationary_start,
+                fixed_leader_angle=args.fixed_leader_angle,
+                circle_radius=args.circle_radius,
+                seed_base=args.seed_base + 10_000 * rho_i,
+                workers=args.workers,
+            )
+            series, scalar_runs = run_sweep(config)
 
-        rho_dir = out_dir / f"rho_{rho:g}"
-        write_scalar_tables(rho_dir, config, scalar_runs)
-        d_path = rho_dir / f"d_comparacion_escenarios_rho_{rho:g}.png"
-        plot_d_only(d_path, config, series, scalar_runs)
-        print(f"[rho={rho:g}] Saved comparative figure: {d_path}", flush=True)
+            rho_dir = out_dir / f"rho_{rho:g}"
+            write_scalar_tables(rho_dir, config, scalar_runs)
+            d_path = rho_dir / f"d_comparacion_escenarios_rho_{rho:g}.png"
+            plot_d_only(d_path, config, series, scalar_runs)
+            print(f"[rho={rho:g}] Saved comparative figure: {d_path}", flush=True)
+
+        if args.skip_animations:
+            continue
+        if args.anim_tmax <= 0:
+            print(f"[rho={rho:g}] Skipping animations because --anim-tmax <= 0", flush=True)
+            continue
 
         print(f"[rho={rho:g}] Rendering two animations (low/high noise)...", flush=True)
         low_anim = run_animation_case(

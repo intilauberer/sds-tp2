@@ -1,17 +1,20 @@
 ---
-title: "SdS_TP2_2026Q1GXXCSS_Informe"
+title: "Simulación de Sistemas TP2 Informe"
 author:
-  - "Grupo 2026Q1GXX"
+  - "Grupo 2026Q1G03"
 date: "30/03/2026"
 lang: es
 geometry: margin=2.5cm
 fontsize: 11pt
+header-includes: |
+  \usepackage{float}
+  \floatplacement{figure}{H}
 ---
 
 **Materia:** Simulación de Sistemas  
 **Trabajo Práctico:** TP2 – Autómata Off-Lattice (Vicsek)  
-**Comisión:** SS  
-**Integrantes:** _[completar]_  
+**Comisión:** S  
+**Integrantes:**  Federico Inti Garcia Lauberer, Felipe Mindlin, Matias Sapino
 
 ## Resumen
 
@@ -99,27 +102,21 @@ La simulación produce archivos de estado y, en una etapa posterior, el módulo 
 
 ### 4.1. (a) Animaciones características
 
-Se generaron animaciones con vectores velocidad coloreados por ángulo y líder identificado. En PDF no se embebe animación: se incluyen links a los archivos.
+Se generaron animaciones con vectores velocidad coloreados por ángulo y líder identificado.
 
 - Sin líder: [a/vicsek_no_leader_no_legend.gif](a/vicsek_no_leader_no_legend.gif)
 - Líder fijo: [a/vicsek_line_fixed_slope.gif](a/vicsek_line_fixed_slope.gif)
-- Caso de referencia: [a/vicsek_anim.gif](a/vicsek_anim.gif)
+- Líder circular: [a/vicsek_anim.gif](a/vicsek_anim.gif)
 
 ### 4.2. (b) Evolución temporal de $v_a(t)$ y criterio estacionario
 
 Se muestran **solo evoluciones temporales características**, suficientes para justificar la definición del observable escalar (evitando redundancia de curvas).
 
-![Evolución temporal representativa de $v_a(t)$ para escenario sin líder.](b/b_evolucion_temporal_va_none.png)
+![Evolución temporal de $v_a(t)$ para escenario sin líder, con tres niveles de ruido.](b/b_evolucion_temporal_va_none.png)
 
-**Figura 1.** Evolución temporal de $v_a(t)$ para escenario sin líder, con tres niveles de ruido representativos.
+![Evolución temporal de $v_a(t)$ para líder fijo, con tres niveles de ruido.](b/b_evolucion_temporal_va_fixed.png)
 
-![Evolución temporal representativa de $v_a(t)$ para líder fijo.](b/b_evolucion_temporal_va_fixed.png)
-
-**Figura 2.** Evolución temporal de $v_a(t)$ para líder fijo.
-
-![Evolución temporal representativa de $v_a(t)$ para líder circular.](b/b_evolucion_temporal_va_circular.png)
-
-**Figura 3.** Evolución temporal de $v_a(t)$ para líder circular.
+![Evolución temporal de $v_a(t)$ para líder circular, con tres niveles de ruido.](b/b_evolucion_temporal_va_circular.png)
 
 Con base en estas curvas se tomó, para el barrido principal ($\rho=4$), ventana estacionaria desde $t_s=175$.
 
@@ -127,15 +124,9 @@ Con base en estas curvas se tomó, para el barrido principal ($\rho=4$), ventana
 
 ![Curva $\langle v_a\rangle$ vs $\eta$ para escenario sin líder.](c/c_va_vs_eta_none.png)
 
-**Figura 4.** Curva input–output para escenario sin líder.
-
 ![Curva $\langle v_a\rangle$ vs $\eta$ para líder fijo.](c/c_va_vs_eta_fixed.png)
 
-**Figura 5.** Curva input–output para líder fijo.
-
 ![Curva $\langle v_a\rangle$ vs $\eta$ para líder circular.](c/c_va_vs_eta_circular.png)
-
-**Figura 6.** Curva input–output para líder circular.
 
 Tabla resumen (media estacionaria para $\rho=4$):
 
@@ -152,19 +143,13 @@ Tabla resumen (media estacionaria para $\rho=4$):
 
 ![Comparación de $\langle v_a\rangle$ vs $\eta$ para los tres escenarios.](d/d_comparacion_escenarios.png)
 
-**Figura 7.** Comparación final solicitada en el enunciado (sin líder, líder fijo y líder circular).
-
 Se observa la caída de $\langle v_a\rangle$ al aumentar $\eta$ en los tres casos, con diferencias moderadas entre escenarios en el rango estudiado.
 
 ### 4.5. (e) Extensión opcional: densidades $\rho=2$ y $\rho=8$
 
 ![Comparación de escenarios para $\rho=2$.](e/rho_2/d_comparacion_escenarios_rho_2.png)
 
-**Figura 8.** Curva comparativa (estilo ítem d) para $\rho=2$.
-
 ![Comparación de escenarios para $\rho=8$.](e/rho_8/d_comparacion_escenarios_rho_8.png)
-
-**Figura 9.** Curva comparativa (estilo ítem d) para $\rho=8$.
 
 Tabla resumen para $\rho=2$ (media estacionaria):
 
@@ -195,23 +180,15 @@ Animaciones opcionales (máximo dos por densidad):
 - $\rho=2$: [e/rho_2/animations/rho_2_eta_0p5.gif](e/rho_2/animations/rho_2_eta_0p5.gif), [e/rho_2/animations/rho_2_eta_3.gif](e/rho_2/animations/rho_2_eta_3.gif)
 - $\rho=8$: [e/rho_8/animations/rho_8_eta_0p5.gif](e/rho_8/animations/rho_8_eta_0p5.gif), [e/rho_8/animations/rho_8_eta_3.gif](e/rho_8/animations/rho_8_eta_3.gif)
 
-### 4.6. Análisis adicional (no obligatorio): ángulo líder–grupo
+### 4.6. Análisis adicional: ángulo líder–grupo
 
-![Ángulo del líder y del grupo para líder fijo.](f/f_angulo_lider_vs_grupo_fixed.png)
+![Evolución angular $\theta_L(t)$ y $\theta_S(t)$ para líder fijo.](f/f_angulo_lider_vs_grupo_fixed.png)
 
-**Figura 10.** Evolución angular $\theta_L(t)$ y $\theta_S(t)$ para líder fijo.
+![Correlación angular $C(t)=\cos(\theta_L-\theta_S)$ para líder fijo.](f/f_correlacion_lider_sistema_fixed.png)
 
-![Correlación angular para líder fijo.](f/f_correlacion_lider_sistema_fixed.png)
+![Evolución angular $\theta_L(t)$ y $\theta_S(t)$ para líder circular.](f/f_angulo_lider_vs_grupo_circular.png)
 
-**Figura 11.** Correlación angular $C(t)=\cos(\theta_L-\theta_S)$ para líder fijo.
-
-![Ángulo del líder y del grupo para líder circular.](f/f_angulo_lider_vs_grupo_circular.png)
-
-**Figura 12.** Evolución angular $\theta_L(t)$ y $\theta_S(t)$ para líder circular.
-
-![Correlación angular para líder circular.](f/f_correlacion_lider_sistema_circular.png)
-
-**Figura 13.** Correlación angular $C(t)$ para líder circular.
+![Correlación angular $C(t)$ para líder circular.](f/f_correlacion_lider_sistema_circular.png)
 
 ## 5. Conclusiones
 

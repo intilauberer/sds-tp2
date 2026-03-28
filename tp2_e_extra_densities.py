@@ -27,6 +27,16 @@ from tp2_bcd import RunConfig, SCENARIOS, parse_eta_values, run_sweep, write_sca
 from vicsek import VicsekSimulation
 
 
+FIG_TITLE_SIZE = 20
+AXIS_LABEL_SIZE = 18
+TICK_LABEL_SIZE = 16
+LEGEND_SIZE = 14
+
+
+def apply_axes_style(ax: plt.Axes) -> None:
+    ax.tick_params(axis="both", which="major", labelsize=TICK_LABEL_SIZE)
+
+
 def plot_d_only(
     out_path: Path,
     config: RunConfig,
@@ -60,11 +70,12 @@ def plot_d_only(
             color=scenario_colors[scenario],
         )
 
-    ax.set_xlabel(r"Ruido $\eta$")
-    ax.set_ylabel(r"$\langle v_a \rangle$ estacionario")
-    ax.set_title(f"Comparacion de escenarios (rho={config.rho:g})")
+    ax.set_xlabel("Ruido angular η", fontsize=AXIS_LABEL_SIZE)
+    ax.set_ylabel("Polarización estacionaria <va>", fontsize=AXIS_LABEL_SIZE)
+    ax.set_title(f"Comparación de escenarios (ρ={config.rho:g})", fontsize=FIG_TITLE_SIZE)
     ax.grid(alpha=0.3)
-    ax.legend()
+    apply_axes_style(ax)
+    ax.legend(fontsize=LEGEND_SIZE)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_path, dpi=220)
     plt.close(fig)

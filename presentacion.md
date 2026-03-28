@@ -9,7 +9,7 @@ outertheme: "miniframes"
 
 ## Introducción / Sistema Real / Fundamentos
 
-## 1. Introducción y Modelo
+## Introducción y Modelo
 
 :::: {.columns}
 ::: {.column width="50%"}
@@ -27,9 +27,78 @@ outertheme: "miniframes"
 :::
 ::::
 
+## Implementación
+
+## Implementación: arquitectura del motor
+
+:::: {.columns}
+::: {.column width="50%"}
+- Motor de simulación modular para evolución temporal del sistema.
+- Actualización sincrónica de las partículas en cada paso de tiempo.
+- Cálculo de vecinos por radio de interacción y contorno periódico.
+- Soporte de tres dinámicas: sin líder, líder fijo y líder circular.
+:::
+::: {.column width="50%"}
+- Observable instantáneo:
+	$$v_a(t)=\frac{1}{N v_0}\left|\sum_{i=1}^{N}\mathbf{v}_i(t)\right|$$
+- Observable escalar estacionario:
+	$$\langle v_a\rangle=\frac{1}{T_{est}}\sum_{t=t_s}^{t_{max}}v_a(t)$$
+- El output primario es el estado del sistema vs tiempo.
+- Los observables se calculan off-line a partir del estado.
+:::
+::::
+
+## Implementación: pseudocódigo del loop temporal
+
+```text
+Inicializar partículas (x_i, y_i, theta_i)
+Para t = 0 ... t_max:
+	Para cada partícula i:
+		Buscar vecinos en radio r0
+		Aplicar mínima imagen periódica
+		Calcular dirección promedio local
+		Agregar ruido uniforme en [-eta/2, eta/2]
+		Guardar nuevo ángulo de i
+	Actualizar ángulos de todas las partículas
+	Mover partículas con velocidad v0
+	Aplicar contorno periódico
+	Si hay líder externo (fijo o circular):
+		Forzar su dinámica
+	Exportar estado del sistema a archivo de texto
+Fin
+```
+
+## Simulaciones
+
+## Configuración del sistema simulado
+
+:::: {.columns}
+::: {.column width="50%"}
+- Geometría: caja cuadrada con contorno periódico.
+- Parámetros fijos base:
+	- $L = 1 \times 10^1$
+	- $\rho = 4 \times 10^0$
+	- $r_0 = 1 \times 10^0$
+	- $v_0 = 3 \times 10^{-2}$
+- Inputs variables:
+	- ruido angular $\eta$
+	- escenario del líder
+:::
+::: {.column width="50%"}
+- Outputs directos: estado del sistema vs tiempo.
+- Observables derivados off-line:
+	- $v_a(t)$
+	- $\langle v_a\rangle$ estacionario
+- Ventana estacionaria usada en base:
+	- $t_s = 1.75 \times 10^2$
+- Repeticiones por punto:
+	- $2 \times 10^0$ corridas independientes
+:::
+::::
+
 ## Resultados
 
-## 2.1 Animación: Sin líder
+## Animación: Sin líder
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -39,11 +108,13 @@ outertheme: "miniframes"
 - Vectores velocidad coloreados según ángulo.
 :::
 ::: {.column width="60%"}
-[Espacio para video: a/vicsek_no_leader_no_legend.gif]
+![](b/b_evolucion_temporal_comparacion_eta_0.00.png)
+
+Link animación (YouTube): [https://www.youtube.com/shorts/XXkGn0btGuo](https://www.youtube.com/shorts/XXkGn0btGuo)
 :::
 ::::
 
-## 2.2 Animación: Líder con dirección fija
+## Animación: Líder con dirección fija
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -53,11 +124,13 @@ outertheme: "miniframes"
 - Partícula líder identificada visualmente.
 :::
 ::: {.column width="60%"}
-[Espacio para video: a/vicsek_line_fixed_slope.gif]
+![](b/b_evolucion_temporal_va_fixed.png)
+
+Link animación (YouTube): [https://www.youtube.com/shorts/0Son8c38P_s](https://www.youtube.com/shorts/0Son8c38P_s)
 :::
 ::::
 
-## 2.3 Animación: Líder circular
+## Animación: Líder circular
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -67,11 +140,13 @@ outertheme: "miniframes"
 - Parámetros fijos: $\rho = 4 \times 10^0$, $N = 4 \times 10^2$.
 :::
 ::: {.column width="60%"}
-[Espacio para video: a/vicsek_anim.gif]
+![](b/b_evolucion_temporal_va_circular.png)
+
+Link animación (YouTube): [https://www.youtube.com/shorts/7ZK-rAYKzTA](https://www.youtube.com/shorts/7ZK-rAYKzTA)
 :::
 ::::
 
-## 3.1 Evolución temporal: Sin líder
+## Evolución temporal: Sin líder
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -85,7 +160,7 @@ outertheme: "miniframes"
 :::
 ::::
 
-## 3.2 Evolución temporal: Líder con dirección fija
+## Evolución temporal característica: Líder con dirección fija
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -99,7 +174,7 @@ outertheme: "miniframes"
 :::
 ::::
 
-## 3.3 Evolución temporal: Líder circular
+## Evolución temporal característica: Líder circular
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -113,7 +188,7 @@ outertheme: "miniframes"
 :::
 ::::
 
-## 3.4 Comparación ruido: $\eta = 0.00$
+## Comparación temporal característica: $\eta = 0.00$
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -127,7 +202,7 @@ outertheme: "miniframes"
 :::
 ::::
 
-## 3.5 Comparación ruido: $\eta = 1.80$
+## (Backup) Comparación temporal: $\eta = 1.80$
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -141,7 +216,7 @@ outertheme: "miniframes"
 :::
 ::::
 
-## 3.6 Comparación ruido: $\eta = 3.00$
+## (Backup) Comparación temporal: $\eta = 3.00$
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -155,7 +230,7 @@ outertheme: "miniframes"
 :::
 ::::
 
-## 4.1 Curva $\langle v_a\rangle$ vs $\eta$: Sin líder
+## Curva $\langle v_a\rangle$ vs $\eta$: Sin líder
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -169,7 +244,7 @@ outertheme: "miniframes"
 :::
 ::::
 
-## 4.2 Curva $\langle v_a\rangle$ vs $\eta$: Líder con dirección fija
+## Curva $\langle v_a\rangle$ vs $\eta$: Líder con dirección fija
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -183,7 +258,7 @@ outertheme: "miniframes"
 :::
 ::::
 
-## 4.3 Curva $\langle v_a\rangle$ vs $\eta$: Líder circular
+## Curva $\langle v_a\rangle$ vs $\eta$: Líder circular
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -211,7 +286,7 @@ outertheme: "miniframes"
 :::
 ::::
 
-## 6.1 Extensión Opcional: Animaciones $\rho = 2$
+## Extensión opcional: Animaciones $\rho = 2$
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -220,13 +295,13 @@ outertheme: "miniframes"
 - Se evalúa impacto del ruido con menor interacción local.
 :::
 ::: {.column width="60%"}
-[Espacio para video: e/rho_2/animations/rho_2_eta_0p5.gif]
+Link animación (ruido bajo, YouTube): [https://www.youtube.com/shorts/FrsD14uzri8](https://www.youtube.com/shorts/FrsD14uzri8)
 
-[Espacio para video: e/rho_2/animations/rho_2_eta_3.gif]
+Link animación (ruido alto, YouTube): [https://www.youtube.com/shorts/y4YApFvEP-k](https://www.youtube.com/shorts/y4YApFvEP-k)
 :::
 ::::
 
-## 6.2 Extensión Opcional: Gráfico $\rho = 2$
+## Extensión opcional: Gráfico $\rho = 2$
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -239,7 +314,7 @@ outertheme: "miniframes"
 :::
 ::::
 
-## 6.3 Extensión Opcional: Animaciones $\rho = 8$
+## Extensión opcional: Animaciones $\rho = 8$
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -248,13 +323,13 @@ outertheme: "miniframes"
 - Mayor densidad implica mayor conectividad entre agentes.
 :::
 ::: {.column width="60%"}
-[Espacio para video: e/rho_8/animations/rho_8_eta_0p5.gif]
+Link animación (ruido bajo, YouTube): [https://www.youtube.com/shorts/lCtVQ0euHV8](https://www.youtube.com/shorts/lCtVQ0euHV8)
 
-[Espacio para video: e/rho_8/animations/rho_8_eta_3.gif]
+Link animación (ruido alto, YouTube): [https://www.youtube.com/shorts/z5BwhoWZBR4](https://www.youtube.com/shorts/z5BwhoWZBR4)
 :::
 ::::
 
-## 6.4 Extensión Opcional: Gráfico $\rho = 8$
+## Extensión opcional: Gráfico $\rho = 8$
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -267,7 +342,7 @@ outertheme: "miniframes"
 :::
 ::::
 
-## 7.1 Análisis del Líder: Ángulos (Líder Fijo)
+## (Opcional) Análisis del Líder: Ángulos (Líder Fijo)
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -281,7 +356,7 @@ outertheme: "miniframes"
 :::
 ::::
 
-## 7.2 Análisis del Líder: Ángulos (Líder Circular)
+## (Opcional) Análisis del Líder: Ángulos (Líder Circular)
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -295,7 +370,7 @@ outertheme: "miniframes"
 :::
 ::::
 
-## 7.3 Análisis del Líder: Correlación (Líder Fijo)
+## (Opcional) Análisis del Líder: Correlación (Líder Fijo)
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -308,7 +383,7 @@ outertheme: "miniframes"
 :::
 ::::
 
-## 7.4 Análisis del Líder: Correlación (Líder Circular)
+## (Opcional) Análisis del Líder: Correlación (Líder Circular)
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -323,15 +398,17 @@ outertheme: "miniframes"
 
 ## Conclusiones
 
-## 8. Conclusiones
+## Conclusiones
 
 - En los tres escenarios, $\langle v_a\rangle$ decrece al aumentar $\eta$, evidenciando pérdida progresiva de orden colectivo.
 - Para la densidad base de $\rho = 4 \times 10^0$, las diferencias entre escenarios (sin líder, líder fijo, líder circular) son visibles pero moderadas en el rango muestreado.
 - En la extensión opcional, se observó que al aumentar la densidad poblacional, la caída de la polarización estacionaria $\langle v_a\rangle$ se vuelve más abrupta.
 - Las observaciones aplican estrictamente para la resolución de valores de $\eta$ y repeticiones estudiadas.
 
-## 
+##
 
+\vfill
 \begin{center}
-\Huge Muchas Gracias
+\Huge Muchas gracias
 \end{center}
+\vfill

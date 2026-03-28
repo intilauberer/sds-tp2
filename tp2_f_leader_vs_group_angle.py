@@ -27,6 +27,15 @@ from vicsek import VicsekSimulation
 
 SCENARIOS = ("fixed", "circular")
 
+FIG_TITLE_SIZE = 20
+AXIS_LABEL_SIZE = 18
+TICK_LABEL_SIZE = 16
+LEGEND_SIZE = 14
+
+
+def apply_axes_style(ax: plt.Axes) -> None:
+    ax.tick_params(axis="both", which="major", labelsize=TICK_LABEL_SIZE)
+
 
 def wrap_0_2pi(theta: float) -> float:
     return float(theta % (2.0 * math.pi))
@@ -136,14 +145,15 @@ def main() -> None:
         fig, ax = plt.subplots(1, 1, figsize=(8.0, 4.5), constrained_layout=True)
         ax.plot(t, theta_system, lw=1.8, color="#1f77b4", label=r"$\theta_{S}(t)$")
         ax.plot(t, theta_leader, lw=1.8, ls="--", color="#d62728", label=r"$\theta_{lider}(t)$")
-        ax.set_title(f"Escenario: {scenario}")
-        ax.set_xlabel("t")
-        ax.set_ylabel("Angulo [rad]")
+        ax.set_title(f"Escenario: {scenario}", fontsize=FIG_TITLE_SIZE)
+        ax.set_xlabel("Tiempo (pasos)", fontsize=AXIS_LABEL_SIZE)
+        ax.set_ylabel("Ángulo (rad)", fontsize=AXIS_LABEL_SIZE)
         ax.grid(alpha=0.3)
         ax.set_ylim(0.0, 2.0 * math.pi)
         ax.set_yticks([0, math.pi / 2, math.pi, 3 * math.pi / 2, 2 * math.pi])
         ax.set_yticklabels(["0", r"$\pi/2$", r"$\pi$", r"$3\pi/2$", r"$2\pi$"])
-        ax.legend(loc="upper right")
+        apply_axes_style(ax)
+        ax.legend(loc="upper right", fontsize=LEGEND_SIZE)
         fig.savefig(out_path, dpi=220)
         plt.close(fig)
         print(f"[ok] figure: {out_path.resolve()}")
@@ -152,12 +162,13 @@ def main() -> None:
         fig2, ax2 = plt.subplots(1, 1, figsize=(8.0, 4.0), constrained_layout=True)
         c = results[scenario]["corr"]
         ax2.plot(t, c, lw=1.8, color="#2ca02c", label=r"$C(t)=\cos(\theta_L-\theta_S)$")
-        ax2.set_title(f"Escenario: {scenario}")
-        ax2.set_xlabel("t")
-        ax2.set_ylabel("Correlacion angular")
+        ax2.set_title(f"Escenario: {scenario}", fontsize=FIG_TITLE_SIZE)
+        ax2.set_xlabel("Tiempo (pasos)", fontsize=AXIS_LABEL_SIZE)
+        ax2.set_ylabel("Correlación angular", fontsize=AXIS_LABEL_SIZE)
         ax2.set_ylim(-1.05, 1.05)
         ax2.grid(alpha=0.3)
-        ax2.legend(loc="upper right")
+        apply_axes_style(ax2)
+        ax2.legend(loc="upper right", fontsize=LEGEND_SIZE)
         fig2.savefig(corr_path, dpi=220)
         plt.close(fig2)
         print(f"[ok] correlation figure: {corr_path.resolve()}")

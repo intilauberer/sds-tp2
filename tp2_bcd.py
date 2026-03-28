@@ -26,6 +26,25 @@ from vicsek import VicsekSimulation
 
 SCENARIOS = ("none", "fixed", "circular")
 
+# Figure style for readability in slides/reports
+FIG_TITLE_SIZE = 20
+AXIS_LABEL_SIZE = 18
+TICK_LABEL_SIZE = 16
+LEGEND_SIZE = 14
+
+
+def sci_fmt(x: float) -> str:
+    """Return scientific notation as a LaTeX-friendly string: a × 10^{b}."""
+    if x == 0:
+        return r"0 \times 10^{0}"
+    exp = int(math.floor(math.log10(abs(x))))
+    mant = x / (10 ** exp)
+    return rf"{mant:.1f} \times 10^{{{exp}}}"
+
+
+def apply_axes_style(ax: plt.Axes) -> None:
+    ax.tick_params(axis="both", which="major", labelsize=TICK_LABEL_SIZE)
+
 
 @dataclass
 class RunConfig:
@@ -240,13 +259,20 @@ def plot_temporal_evolution(
         fig, ax = plt.subplots(figsize=(7, 5), constrained_layout=True)
         for i, eta in enumerate(chosen_etas):
             mean_series = np.mean(series[scenario][eta], axis=0)
-            ax.plot(t, mean_series, lw=1.5, color=cmap(i / max(1, len(chosen_etas) - 1)), label=fr"$\eta={eta:.2f}$")
+            ax.plot(
+                t,
+                mean_series,
+                lw=1.5,
+                color=cmap(i / max(1, len(chosen_etas) - 1)),
+                label=rf"$\eta={sci_fmt(float(eta))}$",
+            )
         ax.axvspan(t_stationary_start, config.tmax, color="gray", alpha=0.15, label="ventana estacionaria")
-        ax.set_title(f"Escenario: {scenario}")
-        ax.set_xlabel("t")
-        ax.set_ylabel(r"Polarizacion $v_a(t)$")
+        ax.set_title(f"Escenario: {scenario}", fontsize=FIG_TITLE_SIZE)
+        ax.set_xlabel("Tiempo (pasos)", fontsize=AXIS_LABEL_SIZE)
+        ax.set_ylabel("Polarización va(t)", fontsize=AXIS_LABEL_SIZE)
         ax.grid(alpha=0.3)
-        ax.legend()
+        apply_axes_style(ax)
+        ax.legend(fontsize=LEGEND_SIZE)
         fig.savefig(out_dir / f"b_evolucion_temporal_va_{scenario}.png", dpi=220)
         plt.close(fig)
 
@@ -268,11 +294,12 @@ def plot_temporal_comparison_by_eta(
             mean_series = np.mean(series[scenario][eta], axis=0)
             ax.plot(t, mean_series, lw=1.7, color=scenario_colors[scenario], label=scenario)
         ax.axvspan(t_stationary_start, config.tmax, color="gray", alpha=0.15, label="ventana estacionaria")
-        ax.set_title(fr"Comparacion por escenario ($\eta={eta:.2f}$)")
-        ax.set_xlabel("t")
-        ax.set_ylabel(r"Polarizacion $v_a(t)$")
+        ax.set_title(rf"Comparación por escenario ($\eta={sci_fmt(float(eta))}$)", fontsize=FIG_TITLE_SIZE)
+        ax.set_xlabel("Tiempo (pasos)", fontsize=AXIS_LABEL_SIZE)
+        ax.set_ylabel("Polarización va(t)", fontsize=AXIS_LABEL_SIZE)
         ax.grid(alpha=0.3)
-        ax.legend()
+        apply_axes_style(ax)
+        ax.legend(fontsize=LEGEND_SIZE)
         fig.savefig(out_dir / f"b_evolucion_temporal_comparacion_eta_{eta:.2f}.png", dpi=220)
         plt.close(fig)
 
@@ -308,12 +335,40 @@ def plot_curves_c_and_d(
             capsize=3,
             color=scenario_colors[scenario],
         )
-        ax.set_title(f"Escenario: {scenario}")
-        ax.set_xlabel(r"Ruido $\eta$")
+        ax.set_title(f"Escenario: {scenario}", fontsize=FIG_TITLE_SIZE)
+        ax.set_xlabel("Ruido angular η", fontsize=AXIS_LABEL_SIZE)
         ax.grid(alpha=0.3)
-    axes[0].set_ylabel(r"$\langle v_a \rangle$ estacionario")
+        apply_axes_style(ax)
+    axes[0].set_ylabel("Polarización estacionaria <va>", fontsize=AXIS_LABEL_SIZE)
     fig_c.savefig(out_dir / "c_va_vs_eta_por_escenario.png", dpi=220)
     plt.close(fig_c)
+
+    # Extra exports for slide-friendly one-figure-per-scenario workflow.
+    for scenario in SCENARIOS:
+        means = []
+        sems = []
+        for e in eta:
+            means.append(float(np.mean(scalar_runs[scenario][float(e)])))
+            _, std_stationary = stationary_mean_and_std(series[scenario][float(e)], t_stationary_start)
+            sems.append(std_stationary)
+
+        fig_s, ax_s = plt.subplots(figsize=(7, 5), constrained_layout=True)
+        ax_s.errorbar(
+            eta,
+            np.array(means),
+            yerr=np.array(sems),
+            marker="o",
+            lw=1.8,
+            capsize=3,
+            color=scenario_colors[scenario],
+        )
+        ax_s.set_title(f"Escenario: {scenario}", fontsize=FIG_TITLE_SIZE)
+        ax_s.set_xlabel("Ruido angular η", fontsize=AXIS_LABEL_SIZE)
+        ax_s.set_ylabel("Polarización estacionaria <va>", fontsize=AXIS_LABEL_SIZE)
+        ax_s.grid(alpha=0.3)
+        apply_axes_style(ax_s)
+        fig_s.savefig(out_dir / f"c_va_vs_eta_{scenario}.png", dpi=220)
+        plt.close(fig_s)
 
     # Point d: comparison in one panel
     fig_d, ax = plt.subplots(figsize=(7, 5), constrained_layout=True)
@@ -336,11 +391,12 @@ def plot_curves_c_and_d(
             label=scenario,
             color=scenario_colors[scenario],
         )
-    ax.set_xlabel(r"Ruido $\eta$")
-    ax.set_ylabel(r"$\langle v_a \rangle$ estacionario")
-    ax.set_title("Comparacion de escenarios (punto d)")
+    ax.set_xlabel("Ruido angular η", fontsize=AXIS_LABEL_SIZE)
+    ax.set_ylabel("Polarización estacionaria <va>", fontsize=AXIS_LABEL_SIZE)
+    ax.set_title("Comparación de escenarios (punto d)", fontsize=FIG_TITLE_SIZE)
     ax.grid(alpha=0.3)
-    ax.legend()
+    apply_axes_style(ax)
+    ax.legend(fontsize=LEGEND_SIZE)
     fig_d.savefig(out_dir / "d_comparacion_escenarios.png", dpi=220)
     plt.close(fig_d)
 

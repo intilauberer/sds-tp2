@@ -8,8 +8,12 @@ En cada panel:
 - theta_S(t) en [0, 2pi] (linea continua)
 - theta_lider(t) en [0, 2pi] (linea punteada)
 
-Ademas calcula correlacion angular:
-    C(t) = cos(theta_L(t) - theta_S(t))
+Para este estudio se fuerza una condicion inicial mas ordenada:
+- los seguidores nacen cerca del lider
+- sus angulos iniciales estan concentrados alrededor de una direccion central
+
+Esto evita que el promedio angular del grupo arranque oscilando entre 0 y 2pi
+solo por un problema de inicializacion cerca del corte angular.
 """
 
 from __future__ import annotations
@@ -57,6 +61,33 @@ def system_angle_without_leader(sim: VicsekSimulation) -> float:
     return wrap_0_2pi(math.atan2(sin_sum / count, cos_sum / count))
 
 
+def spawn_followers_for_f(
+    sim: VicsekSimulation,
+    scenario: str,
+    fixed_leader_angle: float,
+    radial_spread: float,
+) -> None:
+    """Reubica y reorienta seguidores para arrancar ya cohesionados."""
+    rng = np.random.default_rng()
+    leader = sim.particles[sim.leader_id]
+
+    for i, p in enumerate(sim.particles):
+        if i == sim.leader_id:
+            continue
+
+        radius = radial_spread * math.sqrt(float(rng.random()))
+        phase = 2.0 * math.pi * float(rng.random())
+        p.x = float((leader.x + radius * math.cos(phase)) % sim.L)
+        p.y = float((leader.y + radius * math.sin(phase)) % sim.L)
+
+        if scenario == "fixed":
+            # En fijo, arrancar alrededor del lider para que la relajacion hacia su angulo sea visible.
+            p.theta = wrap_0_2pi(fixed_leader_angle + float(rng.uniform(-0.9, 0.9)))
+        else:
+            # En circular, usar una banda mas ancha pero lejos del corte 0/2pi.
+            p.theta = float(rng.uniform(math.pi / 3.0, 4.0 * math.pi / 3.0))
+
+
 def simulate_angles(
     scenario: str,
     n_particles: int,
@@ -86,6 +117,13 @@ def simulate_angles(
         leader_circle_radius=circle_radius,
     )
 
+    spawn_followers_for_f(
+        sim=sim,
+        scenario=scenario,
+        fixed_leader_angle=fixed_leader_angle,
+        radial_spread=min(0.45 * r0, 0.35 * L),
+    )
+
     t = np.arange(tmax + 1, dtype=int)
     theta_system = np.zeros(tmax + 1, dtype=float)
     theta_leader = np.zeros(tmax + 1, dtype=float)
@@ -111,11 +149,17 @@ def main() -> None:
     parser.add_argument("--r0", type=float, default=1.0)
     parser.add_argument("--v0", type=float, default=0.03)
     parser.add_argument("--eta", type=float, default=1.0, help="Ruido usado en ambos escenarios")
-    parser.add_argument("--tmax", type=int, default=750)
+    parser.add_argument("--tmax", type=int, default=None, help="Si no se indica, usa un horizonte suficiente para al menos una vuelta completa del lider circular")
     parser.add_argument("--seed", type=int, default=12345)
     parser.add_argument("--fixed-leader-angle", type=float, default=math.pi / 4.0)
     parser.add_argument("--circle-radius", type=float, default=5.0)
     args = parser.parse_args()
+
+    if args.tmax is None:
+        full_circle_steps = math.ceil((2.0 * math.pi * args.circle_radius) / args.v0)
+        tmax = max(750, 2 * full_circle_steps)
+    else:
+        tmax = args.tmax
 
     n_particles = int(round(args.rho * args.L * args.L))
     results: Dict[str, Dict[str, np.ndarray]] = {}
@@ -128,7 +172,7 @@ def main() -> None:
             r0=args.r0,
             v0=args.v0,
             eta=args.eta,
-            tmax=args.tmax,
+            tmax=tmax,
             seed=args.seed + 1000 * i,
             fixed_leader_angle=args.fixed_leader_angle,
             circle_radius=args.circle_radius,
@@ -145,12 +189,11 @@ def main() -> None:
         fig, ax = plt.subplots(1, 1, figsize=(8.0, 4.5), constrained_layout=True)
         ax.plot(t, theta_system, lw=1.8, color="#1f77b4", label=r"$\theta_{S}(t)$")
         ax.plot(t, theta_leader, lw=1.8, ls="--", color="#d62728", label=r"$\theta_{lider}(t)$")
-        ax.set_title(f"Escenario: {scenario}", fontsize=FIG_TITLE_SIZE)
         ax.set_xlabel("Tiempo (pasos)", fontsize=AXIS_LABEL_SIZE)
-        ax.set_ylabel("Ángulo (rad)", fontsize=AXIS_LABEL_SIZE)
+        ax.set_ylabel("Angulo (rad)", fontsize=AXIS_LABEL_SIZE)
         ax.grid(alpha=0.3)
         ax.set_ylim(0.0, 2.0 * math.pi)
-        ax.set_yticks([0, math.pi / 2, math.pi, 3 * math.pi / 2, 2 * math.pi])
+        ax.set_yticks([0, math.pi / 2, math.pi, 3.0 * math.pi / 2.0, 2.0 * math.pi])
         ax.set_yticklabels(["0", r"$\pi/2$", r"$\pi$", r"$3\pi/2$", r"$2\pi$"])
         apply_axes_style(ax)
         ax.legend(loc="upper right", fontsize=LEGEND_SIZE)
@@ -162,9 +205,8 @@ def main() -> None:
         fig2, ax2 = plt.subplots(1, 1, figsize=(8.0, 4.0), constrained_layout=True)
         c = results[scenario]["corr"]
         ax2.plot(t, c, lw=1.8, color="#2ca02c", label=r"$C(t)=\cos(\theta_L-\theta_S)$")
-        ax2.set_title(f"Escenario: {scenario}", fontsize=FIG_TITLE_SIZE)
         ax2.set_xlabel("Tiempo (pasos)", fontsize=AXIS_LABEL_SIZE)
-        ax2.set_ylabel("Correlación angular", fontsize=AXIS_LABEL_SIZE)
+        ax2.set_ylabel("Correlacion angular", fontsize=AXIS_LABEL_SIZE)
         ax2.set_ylim(-1.05, 1.05)
         ax2.grid(alpha=0.3)
         apply_axes_style(ax2)

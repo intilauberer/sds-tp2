@@ -273,7 +273,7 @@ Link animación: [https://www.youtube.com/shorts/7ZK-rAYKzTA](https://www.youtub
 ::: {.column width="40%"}
 - Comparativa de $\langle v_a \rangle$ para los tres casos.
 - Decrecimiento progresivo del orden colectivo.
-- Diferencias visibles pero moderadas entre escenarios en el rango estudiado.
+- Diferencias poco significativas entre escenarios en el rango estudiado.
 :::
 ::: {.column width="60%"}
 ![](d/d_comparacion_escenarios.png)
@@ -329,7 +329,7 @@ Link animación (ruido alto): [https://www.youtube.com/shorts/z5BwhoWZBR4](https
 ::: {.column width="40%"}
 - Densidad $\rho = 8 \times 10^0$.
 - Comparación de escenarios.
-- Al aumentar la densidad, la caída de $\langle v_a\rangle$ se vuelve más abrupta.
+- Al aumentar la densidad, la caída de $\langle v_a\rangle$ se vuelve menos abrupta.
 :::
 ::: {.column width="60%"}
 ![](e/rho_8/d_comparacion_escenarios_rho_8.png)
@@ -392,12 +392,10 @@ Link animación (ruido alto): [https://www.youtube.com/shorts/z5BwhoWZBR4](https
 
 ## Conclusiones
 
-## Conclusiones
-
+- Se confirmó la existencia de una transición orden-desorden en el modelo, con $\langle v_a\rangle$ validando el impacto del ruido $\eta$ en la organización colectiva.
 - En los tres escenarios, $\langle v_a\rangle$ decrece al aumentar $\eta$, evidenciando pérdida progresiva de orden colectivo.
-- Para la densidad base de $\rho = 4 \times 10^0$, las diferencias entre escenarios (sin líder, líder fijo, líder circular) son visibles pero moderadas en el rango muestreado.
-- En la extensión opcional, se observó que al aumentar la densidad poblacional, la caída de la polarización estacionaria $\langle v_a\rangle$ se vuelve más abrupta.
-- Las observaciones aplican estrictamente para la resolución de valores de $\eta$ y repeticiones estudiadas.
+- Para $\rho=4$, las diferencias entre escenarios son visibles pero poco significativas en el rango de ruido muestreado, con líder fijo ayudando a mantener mayor orden.
+- En la extensión opcional, para $\rho=2$ la transición al orden es más abrupta que para $\rho=4$, mientras que para $\rho=8$ es más gradual.
 
 ##
 

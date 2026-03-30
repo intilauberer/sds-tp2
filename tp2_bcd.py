@@ -267,7 +267,6 @@ def plot_temporal_evolution(
                 label=rf"$\eta={sci_fmt(float(eta))}$",
             )
         ax.axvspan(t_stationary_start, config.tmax, color="gray", alpha=0.15, label="ventana estacionaria")
-        ax.set_title(f"Escenario: {scenario}", fontsize=FIG_TITLE_SIZE)
         ax.set_xlabel("Tiempo (pasos)", fontsize=AXIS_LABEL_SIZE)
         ax.set_ylabel("Polarización va(t)", fontsize=AXIS_LABEL_SIZE)
         ax.grid(alpha=0.3)
@@ -294,7 +293,6 @@ def plot_temporal_comparison_by_eta(
             mean_series = np.mean(series[scenario][eta], axis=0)
             ax.plot(t, mean_series, lw=1.7, color=scenario_colors[scenario], label=scenario)
         ax.axvspan(t_stationary_start, config.tmax, color="gray", alpha=0.15, label="ventana estacionaria")
-        ax.set_title(rf"Comparación por escenario ($\eta={sci_fmt(float(eta))}$)", fontsize=FIG_TITLE_SIZE)
         ax.set_xlabel("Tiempo (pasos)", fontsize=AXIS_LABEL_SIZE)
         ax.set_ylabel("Polarización va(t)", fontsize=AXIS_LABEL_SIZE)
         ax.grid(alpha=0.3)
@@ -335,7 +333,6 @@ def plot_curves_c_and_d(
             capsize=3,
             color=scenario_colors[scenario],
         )
-        ax.set_title(f"Escenario: {scenario}", fontsize=FIG_TITLE_SIZE)
         ax.set_xlabel("Ruido angular η", fontsize=AXIS_LABEL_SIZE)
         ax.grid(alpha=0.3)
         apply_axes_style(ax)
@@ -362,7 +359,6 @@ def plot_curves_c_and_d(
             capsize=3,
             color=scenario_colors[scenario],
         )
-        ax_s.set_title(f"Escenario: {scenario}", fontsize=FIG_TITLE_SIZE)
         ax_s.set_xlabel("Ruido angular η", fontsize=AXIS_LABEL_SIZE)
         ax_s.set_ylabel("Polarización estacionaria <va>", fontsize=AXIS_LABEL_SIZE)
         ax_s.grid(alpha=0.3)
@@ -393,7 +389,6 @@ def plot_curves_c_and_d(
         )
     ax.set_xlabel("Ruido angular η", fontsize=AXIS_LABEL_SIZE)
     ax.set_ylabel("Polarización estacionaria <va>", fontsize=AXIS_LABEL_SIZE)
-    ax.set_title("Comparación de escenarios (punto d)", fontsize=FIG_TITLE_SIZE)
     ax.grid(alpha=0.3)
     apply_axes_style(ax)
     ax.legend(fontsize=LEGEND_SIZE)

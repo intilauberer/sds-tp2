@@ -72,7 +72,6 @@ def plot_d_only(
 
     ax.set_xlabel("Ruido angular η", fontsize=AXIS_LABEL_SIZE)
     ax.set_ylabel("Polarización estacionaria <va>", fontsize=AXIS_LABEL_SIZE)
-    ax.set_title(f"Comparación de escenarios (ρ={config.rho:g})", fontsize=FIG_TITLE_SIZE)
     ax.grid(alpha=0.3)
     apply_axes_style(ax)
     ax.legend(fontsize=LEGEND_SIZE)

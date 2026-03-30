@@ -108,7 +108,7 @@ Fin
 - Vectores velocidad coloreados según ángulo.
 :::
 ::: {.column width="60%"}
-![](b/b_evolucion_temporal_comparacion_eta_0.00.png)
+![](a/vicsek_no_leader_no_legend.png)
 
 Link animación (YouTube): [https://www.youtube.com/shorts/XXkGn0btGuo](https://www.youtube.com/shorts/XXkGn0btGuo)
 :::
@@ -124,7 +124,7 @@ Link animación (YouTube): [https://www.youtube.com/shorts/XXkGn0btGuo](https://
 - Partícula líder identificada visualmente.
 :::
 ::: {.column width="60%"}
-![](b/b_evolucion_temporal_va_fixed.png)
+![](a/vicsek_line_fixed_slope.png)
 
 Link animación (YouTube): [https://www.youtube.com/shorts/0Son8c38P_s](https://www.youtube.com/shorts/0Son8c38P_s)
 :::
@@ -140,7 +140,7 @@ Link animación (YouTube): [https://www.youtube.com/shorts/0Son8c38P_s](https://
 - Parámetros fijos: $\rho = 4 \times 10^0$, $N = 4 \times 10^2$.
 :::
 ::: {.column width="60%"}
-![](b/b_evolucion_temporal_va_circular.png)
+![](a/vicsek_anim.png)
 
 Link animación (YouTube): [https://www.youtube.com/shorts/7ZK-rAYKzTA](https://www.youtube.com/shorts/7ZK-rAYKzTA)
 :::
@@ -202,7 +202,7 @@ Link animación (YouTube): [https://www.youtube.com/shorts/7ZK-rAYKzTA](https://
 :::
 ::::
 
-## (Backup) Comparación temporal: $\eta = 1.80$
+## Comparación temporal: $\eta = 1.80$
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -216,7 +216,7 @@ Link animación (YouTube): [https://www.youtube.com/shorts/7ZK-rAYKzTA](https://
 :::
 ::::
 
-## (Backup) Comparación temporal: $\eta = 3.00$
+## Comparación temporal: $\eta = 3.00$
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -342,7 +342,7 @@ Link animación (ruido alto, YouTube): [https://www.youtube.com/shorts/z5BwhoWZB
 :::
 ::::
 
-## (Opcional) Análisis del Líder: Ángulos (Líder Fijo)
+## Análisis del Líder: Ángulos (Líder Fijo)
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -356,7 +356,7 @@ Link animación (ruido alto, YouTube): [https://www.youtube.com/shorts/z5BwhoWZB
 :::
 ::::
 
-## (Opcional) Análisis del Líder: Ángulos (Líder Circular)
+## Análisis del Líder: Ángulos (Líder Circular)
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -370,7 +370,7 @@ Link animación (ruido alto, YouTube): [https://www.youtube.com/shorts/z5BwhoWZB
 :::
 ::::
 
-## (Opcional) Análisis del Líder: Correlación (Líder Fijo)
+## Análisis del Líder: Correlación (Líder Fijo)
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -383,7 +383,7 @@ Link animación (ruido alto, YouTube): [https://www.youtube.com/shorts/z5BwhoWZB
 :::
 ::::
 
-## (Opcional) Análisis del Líder: Correlación (Líder Circular)
+## Análisis del Líder: Correlación (Líder Circular)
 
 :::: {.columns}
 ::: {.column width="40%"}

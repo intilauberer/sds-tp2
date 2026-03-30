@@ -1,17 +1,21 @@
 ---
-title: "SdS_TP2_2026Q1GXXCSS_Informe"
+title: "SdS_TP2_2026Q1G03CS_Informe"
 author:
-  - "Grupo 2026Q1GXX"
+  - "Grupo 2026Q1G03"
 date: "30/03/2026"
 lang: es
 geometry: margin=2.5cm
 fontsize: 11pt
+header-includes:
+  - \usepackage{float}
+  - \usepackage{graphicx}
+  - \usepackage{hyperref}
 ---
 
 **Materia:** Simulación de Sistemas  
 **Trabajo Práctico:** TP2 – Autómata Off-Lattice (Vicsek)  
-**Comisión:** SS  
-**Integrantes:** _[completar]_  
+**Comisión:** S  
+**Integrantes:** Felipe Mindlin 62774 - Federico Inti García Lauberer 61374 - Matias Sapino 61067
 
 ## Resumen
 
@@ -23,9 +27,9 @@ Este trabajo busca caracterizar la transición orden–desorden en un sistema de
 
 Se analizaron los tres escenarios pedidos:
 
-1. **A) Sin líder**.
-2. **B) Líder con dirección fija** (constante en el tiempo, elegida aleatoriamente al inicio).
-3. **C) Líder circular** (radio $R=5$ y velocidad tangencial comparable con la del resto).
+1. **Sin líder**.
+2. **Líder con dirección fija** (constante en el tiempo, elegida aleatoriamente al inicio).
+3. **Líder circular** (radio $R=5$ y velocidad tangencial comparable con la del resto).
 
 ## 2. Modelo y definición de observables
 
@@ -97,128 +101,171 @@ La simulación produce archivos de estado y, en una etapa posterior, el módulo 
 
 ## 4. Resultados
 
-### 4.1. (a) Animaciones características
+### 4.1. Animaciones características
 
 Se generaron animaciones con vectores velocidad coloreados por ángulo y líder identificado. En PDF no se embebe animación: se incluyen links a los archivos.
 
-- Sin líder: [a/vicsek_no_leader_no_legend.gif](a/vicsek_no_leader_no_legend.gif)
-- Líder fijo: [a/vicsek_line_fixed_slope.gif](a/vicsek_line_fixed_slope.gif)
-- Caso de referencia: [a/vicsek_anim.gif](a/vicsek_anim.gif)
+- Sin líder: [https://www.youtube.com/shorts/XXkGn0btGuo](https://www.youtube.com/shorts/XXkGn0btGuo)
+- Líder fijo: [https://www.youtube.com/shorts/0Son8c38P_s](https://www.youtube.com/shorts/0Son8c38P_s)
+- Líder circular: [https://www.youtube.com/shorts/7ZK-rAYKzTA](https://www.youtube.com/shorts/7ZK-rAYKzTA)
 
-### 4.2. (b) Evolución temporal de $v_a(t)$ y criterio estacionario
+### 4.2. Evolución temporal de $v_a(t)$ y criterio estacionario
 
 Se muestran **solo evoluciones temporales características**, suficientes para justificar la definición del observable escalar (evitando redundancia de curvas).
 
-![Evolución temporal representativa de $v_a(t)$ para escenario sin líder.](b/b_evolucion_temporal_va_none.png)
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{b/b_evolucion_temporal_va_none.png}
+\caption{Evolución temporal de $v_a(t)$ para escenario sin líder, con tres niveles de ruido representativos.}
+\end{figure}
 
-**Figura 1.** Evolución temporal de $v_a(t)$ para escenario sin líder, con tres niveles de ruido representativos.
+Esta gráfica muestra la evolución temporal de la polarización $v_a(t)$ en el escenario sin líder para tres valores representativos de ruido $\eta$. Se observa un transitorio inicial seguido de un estado estacionario, donde valores más altos de ruido conducen a una polarización más baja, indicando pérdida de orden colectivo.
 
-![Evolución temporal representativa de $v_a(t)$ para líder fijo.](b/b_evolucion_temporal_va_fixed.png)
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{b/b_evolucion_temporal_va_fixed.png}
+\caption{Evolución temporal de $v_a(t)$ para líder fijo.}
+\end{figure}
 
-**Figura 2.** Evolución temporal de $v_a(t)$ para líder fijo.
+Esta gráfica presenta la evolución temporal de la polarización $v_a(t)$ en el escenario con líder de dirección fija. Se aprecia cómo el sistema alcanza rápidamente un estado ordenado influenciado por el líder, con el ruido afectando la estabilidad del orden colectivo a lo largo del tiempo.
 
-![Evolución temporal representativa de $v_a(t)$ para líder circular.](b/b_evolucion_temporal_va_circular.png)
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{b/b_evolucion_temporal_va_circular.png}
+\caption{Evolución temporal de $v_a(t)$ para líder circular.}
+\end{figure}
 
-**Figura 3.** Evolución temporal de $v_a(t)$ para líder circular.
+Esta gráfica ilustra la evolución temporal de la polarización $v_a(t)$ en el escenario con líder en trayectoria circular. Se observa una dinámica oscilante influida por el movimiento del líder, con el ruido introduciendo fluctuaciones que afectan el mantenimiento del orden colectivo.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{b/b_evolucion_temporal_comparacion_eta_0.00.png}
+\caption{Comparación temporal característica para $\eta$ = 0.00.}
+\end{figure}
+
+Esta gráfica compara la evolución temporal de $v_a(t)$ para los tres escenarios (sin líder, líder fijo y líder circular) con ruido nulo ($\eta = 0.00$). Se ve que en ausencia de ruido, todos los escenarios alcanzan una polarización casi perfecta, con el líder circular mostrando una ligera oscilación debido a su movimiento.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{b/b_evolucion_temporal_comparacion_eta_1.80.png}
+\caption{Comparación temporal para $\eta$ = 1.80.}
+\end{figure}
+
+Esta gráfica compara la evolución temporal de $v_a(t)$ para los tres escenarios con ruido intermedio ($\eta = 1.80$). Se observa una disminución moderada en la polarización estacionaria, con el escenario sin líder mostrando la mayor variabilidad y los líderes ayudando a mantener un orden relativo.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{b/b_evolucion_temporal_comparacion_eta_3.00.png}
+\caption{Comparación temporal para $\eta$ = 3.00.}
+\end{figure}
+
+Esta gráfica compara la evolución temporal de $v_a(t)$ para los tres escenarios con alto ruido ($\eta = 3.00$). Se aprecia una caída significativa en el orden colectivo, con polarizaciones estacionarias cercanas a 0.5, indicando una transición hacia el desorden, aunque los líderes aún ejercen una influencia moderada.
 
 Con base en estas curvas se tomó, para el barrido principal ($\rho=4$), ventana estacionaria desde $t_s=175$.
 
-### 4.3. (c) Curvas $\langle v_a\rangle$ vs $\eta$ con barras de error
+### 4.3. Curvas $\langle v_a\rangle$ vs $\eta$ con barras de error
 
-![Curva $\langle v_a\rangle$ vs $\eta$ para escenario sin líder.](c/c_va_vs_eta_none.png)
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{c/c_va_vs_eta_none.png}
+\caption{Curva input–output para escenario sin líder.}
+\end{figure}
 
-**Figura 4.** Curva input–output para escenario sin líder.
+Esta gráfica muestra la polarización estacionaria media $\langle v_a \rangle$ en función del ruido $\eta$ para el escenario sin líder, con barras de error. Se observa una transición gradual desde orden perfecto ($\langle v_a \rangle \approx 1$) hacia desorden ($\langle v_a \rangle \approx 0.5$) al aumentar el ruido.
 
-![Curva $\langle v_a\rangle$ vs $\eta$ para líder fijo.](c/c_va_vs_eta_fixed.png)
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{c/c_va_vs_eta_fixed.png}
+\caption{Curva input–output para líder fijo.}
+\end{figure}
 
-**Figura 5.** Curva input–output para líder fijo.
+Esta gráfica presenta la polarización estacionaria media $\langle v_a \rangle$ versus ruido $\eta$ para el líder fijo, incluyendo barras de error. Se ve una caída progresiva del orden al aumentar $\eta$, con el líder ayudando a mantener valores más altos de polarización comparado con el caso sin líder.
 
-![Curva $\langle v_a\rangle$ vs $\eta$ para líder circular.](c/c_va_vs_eta_circular.png)
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{c/c_va_vs_eta_circular.png}
+\caption{Curva input–output para líder circular.}
+\end{figure}
 
-**Figura 6.** Curva input–output para líder circular.
+Esta gráfica ilustra la polarización estacionaria media $\langle v_a \rangle$ en función del ruido $\eta$ para el líder circular, con barras de error. Se observa una disminución del orden colectivo con el ruido, similar a los otros escenarios, pero con el líder circular proporcionando una influencia dinámica que afecta la estabilidad.
 
-Tabla resumen (media estacionaria para $\rho=4$):
+### 4.4. Comparación entre los tres escenarios
 
-| $\eta$ | Sin líder | Líder fijo | Líder circular |
-|---:|---:|---:|---:|
-| 0.0 | 0.999992 | 0.993404 | 0.990745 |
-| 0.6 | 0.980571 | 0.979298 | 0.974920 |
-| 1.2 | 0.919554 | 0.917214 | 0.907833 |
-| 1.8 | 0.823698 | 0.825872 | 0.819484 |
-| 2.4 | 0.699765 | 0.691493 | 0.684623 |
-| 3.0 | 0.547909 | 0.503566 | 0.537780 |
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{d/d_comparacion_escenarios.png}
+\caption{Comparación final solicitada en el enunciado (sin líder, líder fijo y líder circular).}
+\end{figure}
 
-### 4.4. (d) Comparación entre los tres escenarios
+Esta gráfica compara las curvas de polarización estacionaria $\langle v_a \rangle$ versus $\eta$ para los tres escenarios estudiados. Se aprecia que los líderes (fijo y circular) mantienen un orden ligeramente superior al caso sin líder, especialmente en rangos intermedios de ruido, aunque las diferencias son poco significativas.
 
-![Comparación de $\langle v_a\rangle$ vs $\eta$ para los tres escenarios.](d/d_comparacion_escenarios.png)
+Se observa la caída de $\langle v_a\rangle$ al aumentar $\eta$ en los tres casos, con diferencias poco significativas entre escenarios en el rango estudiado.
 
-**Figura 7.** Comparación final solicitada en el enunciado (sin líder, líder fijo y líder circular).
+### 4.5. Extensión opcional: densidades $\rho=2$ y $\rho=8$
 
-Se observa la caída de $\langle v_a\rangle$ al aumentar $\eta$ en los tres casos, con diferencias moderadas entre escenarios en el rango estudiado.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{e/rho_2/d_comparacion_escenarios_rho_2.png}
+\caption{Curva comparativa (estilo ítem d) para $\rho=2$.}
+\end{figure}
 
-### 4.5. (e) Extensión opcional: densidades $\rho=2$ y $\rho=8$
+Esta gráfica muestra la comparación de $\langle v_a \rangle$ versus $\eta$ para los tres escenarios con densidad baja ($\rho=2$). Se observa una transición más abrupta hacia el desorden al aumentar el ruido, debido a la menor interacción local entre partículas.
 
-![Comparación de escenarios para $\rho=2$.](e/rho_2/d_comparacion_escenarios_rho_2.png)
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{e/rho_8/d_comparacion_escenarios_rho_8.png}
+\caption{Curva comparativa (estilo ítem d) para $\rho=8$.}
+\end{figure}
 
-**Figura 8.** Curva comparativa (estilo ítem d) para $\rho=2$.
-
-![Comparación de escenarios para $\rho=8$.](e/rho_8/d_comparacion_escenarios_rho_8.png)
-
-**Figura 9.** Curva comparativa (estilo ítem d) para $\rho=8$.
-
-Tabla resumen para $\rho=2$ (media estacionaria):
-
-| $\eta$ | Sin líder | Líder fijo | Líder circular |
-|---:|---:|---:|---:|
-| 0.0 | 0.998449 | 0.989526 | 0.973122 |
-| 1.0 | 0.922300 | 0.904556 | 0.878453 |
-| 2.0 | 0.699049 | 0.726926 | 0.723140 |
-| 3.0 | 0.360621 | 0.402488 | 0.408894 |
-| 4.0 | 0.122653 | 0.144425 | 0.146293 |
-| 5.0 | 0.070730 | 0.071998 | 0.071380 |
-| 6.0 | 0.064133 | 0.064287 | 0.059829 |
-
-Tabla resumen para $\rho=8$ (media estacionaria):
-
-| $\eta$ | Sin líder | Líder fijo | Líder circular |
-|---:|---:|---:|---:|
-| 0.0 | 1.000000 | 0.998207 | 0.998568 |
-| 1.0 | 0.953172 | 0.951430 | 0.949893 |
-| 2.0 | 0.819063 | 0.818305 | 0.806503 |
-| 3.0 | 0.611249 | 0.599599 | 0.613283 |
-| 4.0 | 0.365345 | 0.329206 | 0.356612 |
-| 5.0 | 0.060128 | 0.058080 | 0.056134 |
-| 6.0 | 0.031996 | 0.032418 | 0.032480 |
+Esta gráfica presenta la comparación de $\langle v_a \rangle$ versus $\eta$ para los tres escenarios con densidad alta ($\rho=8$). Se ve que el orden se mantiene por más tiempo al aumentar el ruido, gracias a las interacciones más frecuentes, pero eventualmente cae hacia el desorden.
 
 Animaciones opcionales (máximo dos por densidad):
 
-- $\rho=2$: [e/rho_2/animations/rho_2_eta_0p5.gif](e/rho_2/animations/rho_2_eta_0p5.gif), [e/rho_2/animations/rho_2_eta_3.gif](e/rho_2/animations/rho_2_eta_3.gif)
-- $\rho=8$: [e/rho_8/animations/rho_8_eta_0p5.gif](e/rho_8/animations/rho_8_eta_0p5.gif), [e/rho_8/animations/rho_8_eta_3.gif](e/rho_8/animations/rho_8_eta_3.gif)
+- $\rho=2$: ruido bajo ($\eta = 0.5$) - [https://www.youtube.com/shorts/FrsD14uzri8](https://www.youtube.com/shorts/FrsD14uzri8)
+- $\rho=2$: ruido alto ($\eta = 3.0$) - [https://www.youtube.com/shorts/y4YApFvEP-k](https://www.youtube.com/shorts/y4YApFvEP-k)
+- $\rho=8$: ruido bajo ($\eta = 0.5$) - [https://www.youtube.com/shorts/FrsD14uzri8](https://www.youtube.com/shorts/FrsD14uzri8)
+- $\rho=8$: ruido alto ($\eta = 3.0$) - [https://www.youtube.com/shorts/y4YApFvEP-k](https://www.youtube.com/shorts/y4YApFvEP-k)
 
-### 4.6. Análisis adicional (no obligatorio): ángulo líder–grupo
+### 4.6. Análisis adicional: ángulo líder–grupo
 
-![Ángulo del líder y del grupo para líder fijo.](f/f_angulo_lider_vs_grupo_fixed.png)
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{f/f_angulo_lider_vs_grupo_fixed.png}
+\caption{Evolución angular $\theta_L(t)$ y $\theta_S(t)$ para líder fijo.}
+\end{figure}
 
-**Figura 10.** Evolución angular $\theta_L(t)$ y $\theta_S(t)$ para líder fijo.
+Esta gráfica muestra la evolución temporal de los ángulos del líder ($\theta_L$) y del grupo ($\theta_S$) para el líder fijo. Se observa cómo el grupo sigue al líder inicialmente, pero el ruido introduce desviaciones que afectan la correlación angular a lo largo del tiempo.
 
-![Correlación angular para líder fijo.](f/f_correlacion_lider_sistema_fixed.png)
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{f/f_correlacion_lider_sistema_fixed.png}
+\caption{Correlación angular $C(t)=\cos(\theta_L-\theta_S)$ para líder fijo.}
+\end{figure}
 
-**Figura 11.** Correlación angular $C(t)=\cos(\theta_L-\theta_S)$ para líder fijo.
+Esta gráfica ilustra la correlación angular $C(t)$ entre el líder y el grupo para el líder fijo. Se aprecia cómo la correlación disminuye con el tiempo debido al ruido, indicando una pérdida progresiva de influencia del líder sobre el colectivo.
 
-![Ángulo del líder y del grupo para líder circular.](f/f_angulo_lider_vs_grupo_circular.png)
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{f/f_angulo_lider_vs_grupo_circular.png}
+\caption{Evolución angular $\theta_L(t)$ y $\theta_S(t)$ para líder circular.}
+\end{figure}
 
-**Figura 12.** Evolución angular $\theta_L(t)$ y $\theta_S(t)$ para líder circular.
+Esta gráfica muestra la evolución temporal de los ángulos del líder ($\theta_L$) y del grupo ($\theta_S$) para el líder circular. Se observa el movimiento oscilante del líder y cómo el grupo intenta seguirlo, con el ruido causando fluctuaciones en la alineación colectiva.
 
-![Correlación angular para líder circular.](f/f_correlacion_lider_sistema_circular.png)
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{f/f_correlacion_lider_sistema_circular.png}
+\caption{Correlación angular $C(t)$ para líder circular.}
+\end{figure}
 
-**Figura 13.** Correlación angular $C(t)$ para líder circular.
+Esta gráfica presenta la correlación angular $C(t)$ entre el líder circular y el grupo. Se ve una correlación que varía con el tiempo debido al movimiento dinámico del líder, con el ruido reduciendo la efectividad de la influencia del líder en el colectivo.
 
 ## 5. Conclusiones
 
 1. Se implementó el modelo de Vicsek off-lattice con salida de estado en texto y animación en módulo separado.
 2. En los tres escenarios, $\langle v_a\rangle$ decrece al aumentar $\eta$, evidenciando pérdida progresiva de orden colectivo.
-3. Para $\rho=4$, las diferencias entre escenarios son visibles pero moderadas en el rango de ruido muestreado.
-4. En la extensión opcional, al aumentar la densidad la caída de $\langle v_a\rangle$ se vuelve más abrupta.
+3. Para $\rho=4$, las diferencias entre escenarios son visibles pero moderadas en el rango de ruido muestreado, con líderes ayudando a mantener mayor orden.
+4. En la extensión opcional, para $\rho=2$ la transición al desorden es más abrupta que para $\rho=4$, mientras que para $\rho=8$ es más gradual.
 
 **Alcance:** estas conclusiones aplican **para la resolución de valores de $\eta$ estudiada** y el número de corridas utilizado. Un barrido más fino alrededor de la zona de transición podría cambiar la estimación precisa del punto crítico.
 

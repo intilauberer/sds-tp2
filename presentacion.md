@@ -2,9 +2,14 @@
 title: "Autómatas Celulares (Modelo de Vicsek)"
 subtitle: "Trabajo Práctico Nro. 2"
 author: "Grupo 2026Q1G03"
+institute: "Integrantes: Felipe Mindlin 62774, Federico Inti García Lauberer 61374, Matias Sapino 61067"
 date: "30/03/2026"
 theme: "Warsaw"
 outertheme: "miniframes"
+header-includes:
+  - \usepackage{graphicx}
+  - \usepackage{hyperref}
+  - \usepackage{fontspec}
 ---
 
 ## Introducción / Sistema Real / Fundamentos
@@ -92,7 +97,7 @@ Fin
 - Ventana estacionaria usada en base:
 	- $t_s = 1.75 \times 10^2$
 - Repeticiones por punto:
-	- $2 \times 10^0$ corridas independientes
+	- $5 \times 10^0$ corridas independientes
 :::
 ::::
 
@@ -110,7 +115,7 @@ Fin
 ::: {.column width="60%"}
 ![](a/vicsek_no_leader_no_legend.png)
 
-Link animación (YouTube): [https://www.youtube.com/shorts/XXkGn0btGuo](https://www.youtube.com/shorts/XXkGn0btGuo)
+Link animación: [https://www.youtube.com/shorts/XXkGn0btGuo](https://www.youtube.com/shorts/XXkGn0btGuo)
 :::
 ::::
 
@@ -126,7 +131,7 @@ Link animación (YouTube): [https://www.youtube.com/shorts/XXkGn0btGuo](https://
 ::: {.column width="60%"}
 ![](a/vicsek_line_fixed_slope.png)
 
-Link animación (YouTube): [https://www.youtube.com/shorts/0Son8c38P_s](https://www.youtube.com/shorts/0Son8c38P_s)
+Link animación: [https://www.youtube.com/shorts/0Son8c38P_s](https://www.youtube.com/shorts/0Son8c38P_s)
 :::
 ::::
 
@@ -142,7 +147,7 @@ Link animación (YouTube): [https://www.youtube.com/shorts/0Son8c38P_s](https://
 ::: {.column width="60%"}
 ![](a/vicsek_anim.png)
 
-Link animación (YouTube): [https://www.youtube.com/shorts/7ZK-rAYKzTA](https://www.youtube.com/shorts/7ZK-rAYKzTA)
+Link animación: [https://www.youtube.com/shorts/7ZK-rAYKzTA](https://www.youtube.com/shorts/7ZK-rAYKzTA)
 :::
 ::::
 
@@ -300,6 +305,14 @@ Link animación (ruido bajo, YouTube): [https://www.youtube.com/shorts/FrsD14uzr
 Link animación (ruido alto, YouTube): [https://www.youtube.com/shorts/y4YApFvEP-k](https://www.youtube.com/shorts/y4YApFvEP-k)
 :::
 ::::
+
+## Conclusiones
+
+- Se implementó exitosamente el modelo de Vicsek off-lattice con módulos separados para simulación y animación.
+- En todos los escenarios, la polarización $\langle v_a \rangle$ decrece con el ruido $\eta$, indicando transición orden-desorden.
+- Los líderes (fijo y circular) ayudan a mantener mayor orden colectivo comparado con el caso sin líder.
+- La densidad afecta la transición: más abrupta en $\rho=2$, más gradual en $\rho=8$.
+- Las conclusiones aplican al rango estudiado; un barrido más fino podría refinar el punto crítico.
 
 ## Extensión opcional: Gráfico $\rho = 2$
 

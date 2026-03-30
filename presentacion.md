@@ -108,7 +108,6 @@ Fin
 :::: {.columns}
 ::: {.column width="40%"}
 - Escenario: Sin partícula líder.
-- Parámetros fijos: $\rho = 4 \times 10^0$, $N = 4 \times 10^2$.
 - Se evalúa la dinámica colectiva base.
 - Vectores velocidad coloreados según ángulo.
 :::
@@ -125,7 +124,6 @@ Link animación: [https://www.youtube.com/shorts/XXkGn0btGuo](https://www.youtub
 ::: {.column width="40%"}
 - Escenario: Líder con dirección constante en el tiempo.
 - Dirección inicial elegida aleatoriamente.
-- Parámetros fijos: $\rho = 4 \times 10^0$, $N = 4 \times 10^2$.
 - Partícula líder identificada visualmente.
 :::
 ::: {.column width="60%"}
@@ -140,9 +138,7 @@ Link animación: [https://www.youtube.com/shorts/0Son8c38P_s](https://www.youtub
 :::: {.columns}
 ::: {.column width="40%"}
 - Escenario: Líder con trayectoria circular.
-- Radio de giro $R = 5 \times 10^0$.
 - Velocidad tangencial comparable a $v_0$.
-- Parámetros fijos: $\rho = 4 \times 10^0$, $N = 4 \times 10^2$.
 :::
 ::: {.column width="60%"}
 ![](a/vicsek_anim.png)
@@ -155,10 +151,9 @@ Link animación: [https://www.youtube.com/shorts/7ZK-rAYKzTA](https://www.youtub
 
 :::: {.columns}
 ::: {.column width="40%"}
-- Observable: $v_a(t) = \frac{1}{N v_0}\left|\sum_{i=1}^{N}\mathbf{v}_i(t)\right|$.
+- Observable: polarización instantánea $v_a(t)$.
 - Escenario: Sin líder.
 - Muestra transiente inicial y estabilización.
-- Inicio de ventana estacionaria $t_s = 1.75 \times 10^2$.
 :::
 ::: {.column width="60%"}
 ![](b/b_evolucion_temporal_va_none.png)
@@ -185,8 +180,7 @@ Link animación: [https://www.youtube.com/shorts/7ZK-rAYKzTA](https://www.youtub
 ::: {.column width="40%"}
 - Observable: $v_a(t)$.
 - Escenario: Líder circular.
-- $\langle v_a\rangle = \frac{1}{T_{est}}\sum_{t=t_s}^{t_{max}}v_a(t)$.
-- $t_s = 1.75 \times 10^2$ establecido a partir de estas curvas.
+- Se determina ventana estacionaria a partir de estas curvas.
 :::
 ::: {.column width="60%"}
 ![](b/b_evolucion_temporal_va_circular.png)
@@ -197,7 +191,6 @@ Link animación: [https://www.youtube.com/shorts/7ZK-rAYKzTA](https://www.youtub
 
 :::: {.columns}
 ::: {.column width="40%"}
-- Observable: $v_a(t)$.
 - Ruido nulo: $\eta = 0 \times 10^0$.
 - Polarización estacionaria $\langle v_a \rangle \approx 1 \times 10^0$ para los tres escenarios.
 - Sistema altamente ordenado.
@@ -241,7 +234,6 @@ Link animación: [https://www.youtube.com/shorts/7ZK-rAYKzTA](https://www.youtub
 ::: {.column width="40%"}
 - Observable estacionario $\langle v_a \rangle$ vs ruido $\eta$.
 - Escenario: Sin líder.
-- Parámetros fijos: $\rho = 4 \times 10^0$.
 - Muestra barras de error asociadas a la media estacionaria.
 :::
 ::: {.column width="60%"}
@@ -255,7 +247,6 @@ Link animación: [https://www.youtube.com/shorts/7ZK-rAYKzTA](https://www.youtub
 ::: {.column width="40%"}
 - Observable estacionario $\langle v_a \rangle$ vs ruido $\eta$.
 - Escenario: Líder con dirección fija.
-- Parámetros fijos: $\rho = 4 \times 10^0$.
 - Transición gradual hacia el desorden.
 :::
 ::: {.column width="60%"}
@@ -268,8 +259,7 @@ Link animación: [https://www.youtube.com/shorts/7ZK-rAYKzTA](https://www.youtub
 :::: {.columns}
 ::: {.column width="40%"}
 - Observable estacionario $\langle v_a \rangle$ vs ruido $\eta$.
-- Escenario: Líder circular con $R = 5 \times 10^0$.
-- Parámetros fijos: $\rho = 4 \times 10^0$.
+- Escenario: Líder circular.
 - Caída de $\langle v_a\rangle$ al aumentar $\eta$.
 :::
 ::: {.column width="60%"}
@@ -277,12 +267,11 @@ Link animación: [https://www.youtube.com/shorts/7ZK-rAYKzTA](https://www.youtub
 :::
 ::::
 
-## 5. Comparación de Escenarios
+## Comparación de Escenarios
 
 :::: {.columns}
 ::: {.column width="40%"}
 - Comparativa de $\langle v_a \rangle$ para los tres casos.
-- Parámetros fijos: $\rho = 4 \times 10^0$.
 - Decrecimiento progresivo del orden colectivo.
 - Diferencias visibles pero moderadas entre escenarios en el rango estudiado.
 :::
@@ -300,19 +289,11 @@ Link animación: [https://www.youtube.com/shorts/7ZK-rAYKzTA](https://www.youtub
 - Se evalúa impacto del ruido con menor interacción local.
 :::
 ::: {.column width="60%"}
-Link animación (ruido bajo, YouTube): [https://www.youtube.com/shorts/FrsD14uzri8](https://www.youtube.com/shorts/FrsD14uzri8)
+Link animación (ruido bajo): [https://www.youtube.com/shorts/FrsD14uzri8](https://www.youtube.com/shorts/FrsD14uzri8)
 
-Link animación (ruido alto, YouTube): [https://www.youtube.com/shorts/y4YApFvEP-k](https://www.youtube.com/shorts/y4YApFvEP-k)
+Link animación (ruido alto): [https://www.youtube.com/shorts/y4YApFvEP-k](https://www.youtube.com/shorts/y4YApFvEP-k)
 :::
 ::::
-
-## Conclusiones
-
-- Se implementó exitosamente el modelo de Vicsek off-lattice con módulos separados para simulación y animación.
-- En todos los escenarios, la polarización $\langle v_a \rangle$ decrece con el ruido $\eta$, indicando transición orden-desorden.
-- Los líderes (fijo y circular) ayudan a mantener mayor orden colectivo comparado con el caso sin líder.
-- La densidad afecta la transición: más abrupta en $\rho=2$, más gradual en $\rho=8$.
-- Las conclusiones aplican al rango estudiado; un barrido más fino podría refinar el punto crítico.
 
 ## Extensión opcional: Gráfico $\rho = 2$
 
@@ -336,9 +317,9 @@ Link animación (ruido alto, YouTube): [https://www.youtube.com/shorts/y4YApFvEP
 - Mayor densidad implica mayor conectividad entre agentes.
 :::
 ::: {.column width="60%"}
-Link animación (ruido bajo, YouTube): [https://www.youtube.com/shorts/lCtVQ0euHV8](https://www.youtube.com/shorts/lCtVQ0euHV8)
+Link animación (ruido bajo): [https://www.youtube.com/shorts/lCtVQ0euHV8](https://www.youtube.com/shorts/lCtVQ0euHV8)
 
-Link animación (ruido alto, YouTube): [https://www.youtube.com/shorts/z5BwhoWZBR4](https://www.youtube.com/shorts/z5BwhoWZBR4)
+Link animación (ruido alto): [https://www.youtube.com/shorts/z5BwhoWZBR4](https://www.youtube.com/shorts/z5BwhoWZBR4)
 :::
 ::::
 

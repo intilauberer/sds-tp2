@@ -395,7 +395,7 @@ Link animación (ruido alto): [https://www.youtube.com/shorts/z5BwhoWZBR4](https
 - Se confirmó la existencia de una transición orden-desorden en el modelo, con $\langle v_a\rangle$ validando el impacto del ruido $\eta$ en la organización colectiva.
 - En los tres escenarios, $\langle v_a\rangle$ decrece al aumentar $\eta$, evidenciando pérdida progresiva de orden colectivo.
 - Para $\rho=4$, las diferencias entre escenarios son visibles pero poco significativas en el rango de ruido muestreado, con líder fijo ayudando a mantener mayor orden.
-- En la extensión opcional, para $\rho=2$ la transición al orden es más abrupta que para $\rho=4$, mientras que para $\rho=8$ es más gradual.
+- En la extensión opcional, para $\rho=2$ la transición al orden en los distintos $\eta$ es más abrupta que para $\rho=4$, mientras que para $\rho=8$ es más gradual.
 
 ##
 
